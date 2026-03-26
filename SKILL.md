@@ -144,9 +144,11 @@ At the start of every run, check whether a `state.json` exists in the workspace.
 The pipeline has 12 logical phases plus entry nodes and gates. Some phases contain multiple subagent calls internally (e.g., persona_council runs three persona subagents plus a synthesis step). The routing includes four gate/checkpoint mechanisms that can loop back on failure.
 
 ```
-PHASE 1: persona_council
-  Run three persona subagents (practical, rigor, narrative), then a synthesis subagent.
-  Produces: research_proposal.md, novelty_assessment.json
+PHASE 1: persona_council (3 DEBATE ROUNDS, minimum 2)
+  Each round: 3 persona subagents (practical, rigor, narrative) + synthesis.
+  Rounds 2-3: personas re-evaluate the revised proposal and must be HARDER.
+  Early exit: only if ALL THREE accept in the same round AND at least 2 rounds done.
+  Produces: research_proposal.md, novelty_assessment.json, per-round persona outputs
 
     --> PHASE 2: literature_review
         Produces: literature_review.md, novelty_flags.json
@@ -420,14 +422,49 @@ When constructing subagent prompts for theory track phases, inject structured go
 
 ## Persona Council Details (Phase 1)
 
-Phase 1 is special because it runs four subagents sequentially:
+Phase 1 runs **3 debate rounds** before producing a final proposal. This is critical — a single pass lets weak ideas through. Multiple rounds force the personas to sharpen their critiques and the synthesis to genuinely address them.
 
-1. **Practical persona** (prompts/01-persona-practical.md): Evaluates feasibility, resource requirements, and real-world applicability.
-2. **Rigor persona** (prompts/02-persona-rigor.md): Evaluates methodological soundness, potential confounds, and formal requirements.
-3. **Narrative persona** (prompts/03-persona-narrative.md): Evaluates clarity of framing, contribution positioning, and storytelling.
-4. **Synthesis** (prompts/04-persona-synthesis.md): Reads all three persona outputs and produces a unified `research_proposal.md`.
+### Round structure (repeat 3 times)
 
-Each persona subagent writes its output to `paper_workspace/persona_<name>.md`. The synthesis subagent reads all three and writes `research_proposal.md` and `novelty_assessment.json`.
+For each round:
+
+1. **Practical persona** (prompts/01-persona-practical.md): Evaluates the current proposal. Writes `paper_workspace/persona_practical_round_N.md`.
+2. **Rigor persona** (prompts/02-persona-rigor.md): Evaluates the current proposal. Writes `paper_workspace/persona_rigor_round_N.md`.
+3. **Narrative persona** (prompts/03-persona-narrative.md): Evaluates the current proposal. Writes `paper_workspace/persona_narrative_round_N.md`.
+4. **Synthesis** (prompts/04-persona-synthesis.md): Reads ALL persona outputs from this round plus any prior rounds. Produces an updated `research_proposal.md`.
+
+### Round flow
+
+- **Round 1:** Each persona evaluates the raw task/hypothesis. Synthesis produces initial `research_proposal.md`.
+- **Round 2:** Each persona evaluates the Round 1 proposal — they should be HARDER now, checking whether their Round 1 concerns were actually addressed. Synthesis refines `research_proposal.md`.
+- **Round 3:** Each persona evaluates the Round 2 proposal for final sharpening. Synthesis produces the final `research_proposal.md`.
+
+### What changes between rounds
+
+When spawning persona subagents for Rounds 2 and 3, prepend this context to their prompt:
+
+```
+This is debate round N of 3. You have already reviewed this proposal in previous rounds.
+Your previous evaluation is in: paper_workspace/persona_<name>_round_<N-1>.md
+The proposal was revised after your feedback: paper_workspace/research_proposal.md
+
+Be HARDER this round. Check whether your previous concerns were genuinely addressed
+or merely papered over. Raise NEW concerns you missed before. Do not repeat praise
+for things already acknowledged.
+```
+
+### When to exit early
+
+If ALL THREE personas return ACCEPT in the same round, you may exit after that round (minimum 2 rounds). Do NOT exit after Round 1 even if all accept — one round is never enough.
+
+### Artifacts produced
+
+After all rounds complete:
+- `paper_workspace/persona_practical_round_1.md` through `round_3.md`
+- `paper_workspace/persona_rigor_round_1.md` through `round_3.md`
+- `paper_workspace/persona_narrative_round_1.md` through `round_3.md`
+- `paper_workspace/research_proposal.md` (final synthesis)
+- `paper_workspace/novelty_assessment.json`
 
 ---
 
