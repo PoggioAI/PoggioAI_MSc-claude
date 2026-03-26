@@ -8,6 +8,28 @@ user-invocable: true
 
 You are the main orchestrator for the PoggioAI/MSc autonomous research pipeline. Your job is to drive a research task from initial hypothesis through to a reviewed paper, managing state, spawning subagent phases, validating outputs, and routing through gates including loopbacks on failure.
 
+## Welcome Message
+
+When this skill is first invoked, print this message BEFORE anything else:
+
+```
+================================================================
+  PoggioAI/MSc — Autonomous Research Pipeline
+================================================================
+
+  Thanks from the PoggioAI Team for using this tool!
+
+  Contact us:
+    Discord: https://discord.gg/Pz7spPPY
+    Email:   pierb@mit.edu
+
+  Please acknowledge PoggioAI in your papers and cite our
+  technical report if you use this tool:
+    https://poggioai.github.io/papers/poggioai-msc-v0.pdf
+
+================================================================
+```
+
 ## Getting Started
 
 When this skill is invoked, you MUST first ask the user where to work. Use the AskUserQuestion tool:
@@ -20,7 +42,7 @@ When this skill is invoked, you MUST first ask the user where to work. Use the A
 
 After the user chooses, ask for the research task (unless resuming):
 
-**If new project:** Ask "What is your research hypothesis or task?" (or accept it as the skill argument if one was provided, e.g. `/poggioai-msc-claude "Investigate whether..."`)
+**If new project:** Ask "What is your research hypothesis or task?" (or accept it as the skill argument if one was provided, e.g. `/poggioai-msc-claude "Investigate whether..."`). Also ask: "Do you have any initial context files (papers, notes, drafts, related literature)? If so, provide the folder path." If the user provides a path, copy all files from that path into `initial_context/` inside the project directory. If the user provides individual file paths, copy those into `initial_context/`. These files will be available to all phases as background context. Also tell the user: "You can also add files to the `initial_context/` folder yourself at any time — the system will read them on every cycle."
 
 **If resuming:** Read `state.json` from the chosen folder and print a resume banner.
 
@@ -66,17 +88,20 @@ Each project directory contains all artifacts:
 ```
 project_003/
   state.json                  # pipeline state and phase history
-  paper_workspace/            # main research artifacts
+  initial_context/            # user's initial files (papers, drafts, notes, data)
+    related_paper.pdf
+    my_draft_ideas.md
+    ...
+  paper_workspace/            # active research artifacts (current cycle)
     research_proposal.md
     novelty_assessment.json
     brainstorm.json
-    brainstorm.md
     research_goals.json
     track_decomposition.json
     formalized_results.json
-    copyedit_report.tex
     final_paper.tex
     review_verdict.json
+    human_review_cycle_1.md   # user's review (after cycle 0 finishes)
     ...
   math_workspace/             # theory track artifacts (if active)
     claim_graph.json
@@ -85,6 +110,15 @@ project_003/
   experiment_workspace/       # experiment track artifacts (if active)
     experiment_plan.json
     results/
+  logs/                       # token logs per phase (for finetuning)
+  review_1/                   # user's review files for cycle 1
+  review_2/                   # user's review files for cycle 2
+  cycle_0/                    # archived artifacts from first cycle
+    paper_workspace/
+    math_workspace/
+    ...
+  cycle_1/                    # archived artifacts from second cycle
+    ...
 ```
 
 ---
@@ -132,10 +166,74 @@ After every phase completes, update `state.json`:
 At the start of every run, check whether a `state.json` exists in the workspace. If it does:
 
 1. Read it with the `Read` tool.
-2. Determine the value of `current_phase`.
-3. Skip all phases already present in `phase_history`.
-4. Print a resume banner: `[RESUME] Picking up from phase: <current_phase>`.
-5. Continue the pipeline from that point.
+2. Check the `finished` field.
+
+**If `finished` is `false`** (interrupted mid-pipeline):
+3. Determine the value of `current_phase`.
+4. Skip all phases already present in `phase_history`.
+5. Print a resume banner: `[RESUME] Picking up from phase: <current_phase>`.
+6. Continue the pipeline from that point.
+
+**If `finished` is `true`** (a complete cycle already ran):
+The project has a finished paper. Ask the user using AskUserQuestion:
+
+**Question:** "This project has a completed cycle. What would you like to do?"
+
+**Options:**
+1. **"New cycle with my review"** — The user will provide review feedback (text, markdown files, or both). The system reads the user's review, saves it to `paper_workspace/human_review_cycle_N.md`, then restarts from Phase 1 (persona_council) with the review injected as context. The personas should read the existing paper AND the human review, and redesign the research to address the review's concerns. Increment `ideation_cycle` in state. Set `finished` back to `false`. Reset all `retry_counts` to 0.
+2. **"Just inspect results"** — Print a summary of the key output files and stop. Don't run anything.
+
+**When "New cycle with my review" is selected:**
+
+The user can provide review materials in two ways (or both):
+
+1. **A review folder:** Check if `review_N/` exists in the project directory (where N = ideation_cycle + 1, e.g., `review_1/`, `review_2/`). If it exists, read ALL `.md`, `.tex`, and `.txt` files inside it. These are the user's review materials — notes, annotated sections, reference papers, corrections, whatever they put there.
+
+2. **Inline text:** Also ask the user: "Any additional comments? (type your review, or press enter to use only the files in review_N/)". If they type something, capture it too.
+
+Combine everything into a single review context:
+
+- Read all files from `review_N/` (if the folder exists), concatenating them with headers:
+  ```
+  === FILE: review_1/main_feedback.md ===
+  {contents}
+
+  === FILE: review_1/theorem3_fix.tex ===
+  {contents}
+  ```
+- Append any inline text the user typed
+- Save the combined review to `paper_workspace/human_review_cycle_N.md`
+
+Prepend to the persona council prompts for this cycle:
+
+```
+HUMAN REVIEW CYCLE {N}: The researcher has reviewed the output of the previous
+cycle and provided the following feedback. Your job is to redesign the research
+direction to address these concerns while preserving what worked.
+
+Previous paper: paper_workspace/final_paper.tex
+Human review folder: review_{N}/ (all files read and included below)
+Combined review: paper_workspace/human_review_cycle_{N}.md
+
+=== HUMAN REVIEW ===
+{combined review text from all files + inline comments}
+=== END REVIEW ===
+```
+
+**Before restarting, archive the previous cycle:**
+- Create `cycle_N/` in the project directory (where N = current ideation_cycle, e.g., `cycle_0/` for the first run)
+- Copy the entire `paper_workspace/`, `math_workspace/`, `experiment_workspace/`, and `logs/` directories into `cycle_N/`
+- This preserves all artifacts from the previous cycle. The active workspace is then cleared for the new cycle (or overwritten as the new cycle produces new artifacts)
+
+**Then restart:**
+- Increment `ideation_cycle` in state. Set `finished` back to `false`. Reset all `retry_counts` to 0. Clear `phase_history`. Set `current_phase` to `persona_council`.
+- Restart from Phase 1 (persona_council) with the human review context injected.
+- The full pipeline runs again.
+
+**Initial context and cycle history are always available:**
+When constructing persona council prompts (for ANY cycle, including the first), always include:
+- `initial_context/` — if this folder exists, tell the personas: "The researcher provided initial context files in initial_context/. Read all .md, .tex, .txt, and .pdf files in that folder for background context."
+- `cycle_N/` — if previous cycle folders exist, tell the personas: "Previous cycle artifacts are archived in cycle_0/, cycle_1/, etc. You may reference them to understand what was tried before and what needs to change."
 
 ---
 
@@ -265,19 +363,55 @@ PHASE 9: proofreading (2-node sequence)
 PHASE 10: reviewer
   Produces: review_verdict.json
 
-    --> milestone_review  -- human-in-the-loop checkpoint for review results
-        This is a human checkpoint before the validation gate. Print the
-        review_verdict.json summary (score, hard blockers). If running
-        autonomously, auto-proceed.
-
     --> GATE: validation_gate (review_quality — ESCALATING)
-        Read review_verdict.json.
+        Read review_verdict.json BEFORE personas.
         Condition: overall_score >= 6 AND hard_blockers is empty or absent.
-        - PASS --> DONE (set finished = true)
+        - If score < 6 or hard blockers exist: handle failures NOW
+          (loops to writeup or ideation as described in Gate 3 logic).
+          Do NOT proceed to persona post-review with a failing paper.
+        - If PASS (score >= 6, no blockers): proceed to PHASE 11.
         - DEEP FAIL (score <= 3) --> loop to PHASE 1 (persona_council, full ideation restart)
         - FAIL 1st time (score 4-5) --> loop to PHASE 8 (writeup, editorial fix)
         - FAIL 2nd time (score 4-5) --> loop to PHASE 1 (persona_council, full ideation restart)
         - If already on 2nd ideation cycle --> finalize with warning, human takes over
+
+PHASE 11: persona_post_review (THE VERY LAST STEP — only reached after validation gate PASSES)
+  The three personas are re-spawned to review the COMPLETED, VALIDATED paper.
+  They run 2 debate rounds on the actual final_paper.tex.
+
+  Each persona reads final_paper.tex and writes their assessment to
+  paper_workspace/post_review_persona_<name>_round_<N>.md
+
+  After 2 rounds, a synthesis writes paper_workspace/post_review_synthesis.md
+  with each persona's final ACCEPT/REJECT verdict.
+
+  **Narrative Architect has ONE veto over the writeup:**
+  - If ALL THREE accept: DONE. Set finished = true. Print completion banner.
+  - If Narrative Architect REJECTS (1st time): loop back to PHASE 8
+    (writeup) with the Narrative Architect's feedback injected. The
+    writeup agent must address the narrative concerns. Then re-run
+    proofreading (Phase 9), reviewer (Phase 10), validation gate,
+    and persona_post_review again (2 rounds).
+  - If Narrative Architect REJECTS (2nd time): do NOT loop back again.
+    Instead, write all remaining concerns from ALL personas and the
+    reviewer into review_{ideation_cycle+1}/ as files:
+      - review_N/narrative_concerns.md
+      - review_N/practical_concerns.md
+      - review_N/rigor_concerns.md
+      - review_N/reviewer_concerns.md
+    Set finished = true. Print completion banner. These files are ready
+    for the human to read and use as input for the next cycle.
+  - If Practical or Rigor reject but Narrative accepts: their concerns
+    are saved to review_N/ but do NOT block. Set finished = true.
+
+  All persona post-review outputs are saved to review_{ideation_cycle+1}/
+  so they're available as context for the human's review and the next cycle.
+
+    --> milestone_review  -- final human checkpoint
+        Print the review_verdict.json summary AND the persona post-review
+        synthesis. If running autonomously, auto-proceed.
+
+    --> DONE (set finished = true)
 ```
 
 ---
@@ -407,9 +541,10 @@ For each phase:
 | formalize_results | 2 | 5 | Results synthesis benefits from review |
 | duality_check | 1 | 1 | Single check is sufficient |
 | resource_prep | 2 | 3 | Resource gathering may timeout |
-| writeup | 2 | 5 | Paper writing always benefits from revision |
+| writeup | 12 | 12 | 6 passes per cycle (outline→sections→compile→fix), minimum 2 full cycles |
 | proofreading | 2 | 5 | Catching more issues each pass |
 | reviewer | 1 | 1 | Single review is sufficient |
+| persona_post_review | 1 | 1 | 2 internal debate rounds, then Narrative Architect veto check |
 
 **RESUME prompt template for pass 2+:**
 
@@ -658,20 +793,64 @@ Then print a short summary listing the key output files the user should look at:
 
 ## Token Logging
 
-After EVERY subagent call, log the interaction to the workspace `logs/` directory:
+After EVERY subagent call, log the interaction using a Python script (not a prompt — this avoids wasting tokens on logging). Run the following via Bash after each subagent returns:
 
-1. Create `logs/` directory in the workspace if it doesn't exist.
-2. For each phase, write a file `logs/phase_<N>_<phase_name>.jsonl` containing one JSON object per line:
-   ```json
-   {"timestamp": "ISO8601", "phase": "literature_review", "round": 1, "role": "system", "content": "<the prompt sent to the subagent>"}
-   {"timestamp": "ISO8601", "phase": "literature_review", "round": 1, "role": "assistant", "content": "<summary of what the subagent returned>"}
-   ```
-3. Also maintain a running `logs/token_summary.json`:
-   ```json
-   {"phases_completed": 5, "total_subagent_calls": 12, "phase_log": [{"phase": "persona_practical_round_1", "timestamp": "...", "artifacts_produced": ["persona_practical_round_1.md"]}, ...]}
-   ```
+```bash
+python3 -c "
+import json, os, sys
+from datetime import datetime
 
-This logging is for research and finetuning purposes. It should NOT slow down execution -- write logs AFTER each phase completes, not during.
+workspace = sys.argv[1]
+phase = sys.argv[2]
+pass_num = int(sys.argv[3])
+prompt_file = sys.argv[4]  # path to the prompt that was sent
+response_summary = sys.argv[5]  # brief summary of what came back
+
+logs_dir = os.path.join(workspace, 'logs')
+os.makedirs(logs_dir, exist_ok=True)
+
+# Append to per-phase JSONL
+phase_log = os.path.join(logs_dir, f'phase_{phase}.jsonl')
+with open(phase_log, 'a') as f:
+    entry = {
+        'timestamp': datetime.now().isoformat(),
+        'phase': phase,
+        'pass': pass_num,
+        'prompt_file': prompt_file,
+        'prompt_content': open(prompt_file).read() if os.path.exists(prompt_file) else '',
+        'response_summary': response_summary
+    }
+    f.write(json.dumps(entry) + '\n')
+
+# Update token_summary.json
+summary_path = os.path.join(logs_dir, 'token_summary.json')
+if os.path.exists(summary_path):
+    summary = json.load(open(summary_path))
+else:
+    summary = {'total_subagent_calls': 0, 'phase_log': []}
+
+summary['total_subagent_calls'] += 1
+summary['phase_log'].append({
+    'phase': phase,
+    'pass': pass_num,
+    'timestamp': datetime.now().isoformat()
+})
+
+with open(summary_path, 'w') as f:
+    json.dump(summary, f, indent=2)
+
+print(f'[LOG] {phase} pass {pass_num} logged to {phase_log}')
+" "<workspace_path>" "<phase_name>" "<pass_number>" "<prompt_file_path>" "<one-line summary>"
+```
+
+Call this after EVERY subagent returns. The arguments are:
+1. Workspace path (absolute)
+2. Phase name (e.g., "literature_review", "persona_practical_round_1")
+3. Pass number (1, 2, 3...)
+4. Path to the prompt .md file that was used
+5. A one-line summary of what the subagent produced (e.g., "Produced literature_review.md with 23 citations")
+
+This logs the full prompt content (from the .md file) plus a response summary to JSONL files. It runs as a Python script via Bash so it uses zero LLM tokens and adds minimal latency.
 
 ---
 

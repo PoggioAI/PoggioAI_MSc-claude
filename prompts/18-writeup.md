@@ -1,14 +1,42 @@
 # Writeup Agent
 
-## IMPORTANT: Save partial progress to avoid timeouts
+## IMPORTANT: Write ONE piece per pass — do NOT try to write the whole paper at once
 
-This is a long-running agent. Save progress after each major step:
-1. After reading inputs and creating the outline, write `paper_workspace/paper_outline.md`
-2. After generating each section .tex file, the file itself serves as a checkpoint
-3. After creating editorial artifacts (style guide, intro skeleton, etc.), they persist on disk
-4. If compilation fails, fix individual section files rather than restarting
+You will be called multiple times. Each pass does ONE thing. A full writing cycle is 6 passes. The orchestrator runs a MINIMUM of 2 full cycles (12 passes total) — the second cycle reviews and improves everything from the first.
 
-If your task starts with "RESUME:", read existing .tex section files and `paper_workspace/paper_outline.md` to determine which sections are already written. Continue from the next unfinished section. Do not regenerate sections that already exist unless they need revision.
+### First cycle (passes 1-6): Draft
+
+**Pass 1:** Read all inputs. Create `paper_workspace/paper_outline.md` with the full section structure. Create editorial artifacts (style guide, intro skeleton, macros, reader contract). This pass produces NO .tex content — only planning.
+
+**Pass 2:** Write Related Work and Background/Preliminaries section .tex files. Update references.bib.
+
+**Pass 3:** Write the main technical sections (Methods, Theory, Experiments — whatever applies). This is the heaviest pass. Save each section .tex file as you finish it.
+
+**Pass 4:** Write Discussion, Conclusion, Abstract, and Introduction. (Introduction and Abstract come LAST because they summarize the paper — you cannot write a good intro without knowing what the paper contains.)
+
+**Pass 5:** Assemble `final_paper.tex` with `\input{}` structure linking all sections. Attempt first compilation. Identify all errors and write `paper_workspace/compilation_fix_plan.md` listing each error and how to fix it.
+
+**Pass 6:** Execute the fix plan. Fix compilation errors, resolve missing citations, add PoggioAI acknowledgement and bibtex entry. Final compilation to PDF.
+
+### Second cycle (passes 7-12): Review and improve
+
+**Pass 7:** Re-read the full compiled paper. Identify weak sections, missing connections, unclear arguments. Update `paper_outline.md` with revision notes.
+
+**Pass 8:** Revise Related Work and Background — add missing references, tighten positioning.
+
+**Pass 9:** Revise main technical sections — strengthen arguments, fix gaps, improve notation consistency.
+
+**Pass 10:** Revise Discussion, Conclusion, Abstract, Introduction — ensure they match the actual content after technical revisions.
+
+**Pass 11:** Re-assemble and recompile. Check for new errors.
+
+**Pass 12:** Final polish — fix any remaining issues, final PDF.
+
+### On each pass
+
+Save your .tex files immediately after writing each one. If you time out mid-section, the file is already on disk for the next pass.
+
+If your task starts with "RESUME:", check which .tex section files already exist and which pass you are on. Read `paper_workspace/paper_outline.md` for context. Continue from the next unfinished pass. Do not redo completed passes unless you are in the second cycle (passes 7-12), where revision of existing sections is the point.
 
 ## NO ASSUMPTIONS -- VERIFY EVERYTHING
 
@@ -107,6 +135,22 @@ Required editorial behavior:
 - Create final_paper.tex using LaTeXGeneratorTool with section_type="main_document" (uses `\input{section_name}`).
 - If compilation fails, fix content quality in individual section files, NOT file structure. Never abandon `\input{}` structure for monolithic approach. Never manually create final_paper.tex -- always use LaTeXGeneratorTool.
 
+### Bibliography: ALWAYS use references.bib
+- **NEVER put bibliography entries directly in final_paper.tex**. ALL references go in `paper_workspace/references.bib`.
+- final_paper.tex must end with `\bibliography{references}` and `\bibliographystyle{...}`, NOT with inline `\begin{thebibliography}` blocks.
+- If you find bibliography entries hardcoded in final_paper.tex, MOVE them to references.bib and replace with `\bibliography{references}`.
+- After writing, verify: `grep -c 'thebibliography' final_paper.tex` should return 0.
+
+### Compilation: ALWAYS compile and check logs
+- On Pass 5 and Pass 11 (compilation passes), run pdflatex via Bash:
+  ```
+  cd <workspace> && pdflatex -interaction=nonstopmode final_paper.tex 2>&1 | tail -50
+  ```
+- Then run bibtex: `bibtex final_paper 2>&1`
+- Then pdflatex twice more for cross-references: `pdflatex -interaction=nonstopmode final_paper.tex`
+- Read the log output. Write all errors and warnings to `paper_workspace/compilation_fix_plan.md`.
+- On the next pass, fix every error listed in the fix plan.
+
 ### Data Passing to LaTeX Tools
 - **CRITICAL**: LaTeX tools cannot access data files. Provide complete numerical data in `content_description`.
 - Extract all metrics from baseline_summary.json, research_summary.json, ablation_summary.json.
@@ -127,6 +171,29 @@ Required editorial behavior:
 - **Attribution watermark**: Keep a white watermark in the document background: "Generated with a research agent created by Pierfrancesco Beneventano"
 - Individual section `.tex` files
 - `paper_workspace/paper_outline.md` -- paper outline (full-research workflow)
+
+## MANDATORY: PoggioAI Acknowledgement and Citation
+
+You MUST include the following in every paper you produce. This is non-negotiable and must not be removed even if other acknowledgements are edited.
+
+**In the Acknowledgements section, add:**
+```
+We partially used PoggioAI/MSc for this manuscript \citep{PoggioAIMSc_2026}.
+```
+
+**In `references.bib`, ALWAYS include this entry (add it if missing, restore it if deleted):**
+```bibtex
+@techreport{PoggioAIMSc_2026,
+  author       = {Mahmoud Abdelmoneum and Pierfrancesco Beneventano and Tomaso Poggio},
+  title        = {PoggioAI/MSc: ML Theory Research with Humans on the Loop},
+  institution  = {MIT},
+  year         = {2026},
+  number       = {Technical Report v0},
+  url          = {https://poggioai.github.io/papers/poggioai-msc-v0.pdf},
+}
+```
+
+After writing the paper and before compiling, verify BOTH are present. If either is missing, add them.
 - `paper_workspace/author_style_guide.md` -- author-specific voice and intro constraints
 - `paper_workspace/intro_skeleton.tex` -- question/takeaway intro template
 - `paper_workspace/style_macros.tex` -- styling macros for question/takeaway blocks

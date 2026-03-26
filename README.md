@@ -6,7 +6,7 @@
 
 A Claude Code skill that runs autonomous multi-agent research: takes a hypothesis and produces a literature-grounded, evidence-backed manuscript draft in 10 human steers or fewer.
 
-[Website](https://PoggioAI.github.io) | [Paper](https://PoggioAI.github.io) | [Full Python System](https://github.com/PoggioAI/PoggioAI_MSc) | [Discord](https://discord.gg/Pz7spPPY)
+[Website](https://PoggioAI.github.io) | [Paper](https://poggioai.github.io/papers/poggioai-msc-v0.pdf) | [Full Python System](https://github.com/PoggioAI/PoggioAI_MSc) | [Discord](https://discord.gg/Pz7spPPY)
 
 ---
 

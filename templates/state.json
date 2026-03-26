@@ -24,6 +24,9 @@
   "verify_completion_result": null,
   "verify_completion_history": [],
   "total_phases_run": 0,
+  "ideation_cycle": 0,
+  "finished": false,
+  "human_reviews": [],
   "started_at": "",
   "last_checkpoint": ""
 }
