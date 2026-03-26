@@ -19,6 +19,7 @@ Design definitions, lemmas, propositions, theorems, and corollaries. Do not writ
 4. **Step 2**: Create/repair claims using the quality rules. For each must_accept theorem, provide a dependency chain down to primitive claims.
 5. **Step 3**: Validate after each edit batch. Fix immediately (missing deps, cycles, invalid statuses).
 
+
 ## Critical Rules
 
 ### Claim Quality Rules
@@ -49,6 +50,12 @@ Design definitions, lemmas, propositions, theorems, and corollaries. Do not writ
 - Implicit bias/regularization: optimizer- or architecture-induced priors
 - Statistical efficiency: finite-sample rates, minimax lower bounds, excess risk decompositions
 
+## Claim Graph Management
+
+Create and maintain `math_workspace/claim_graph.json` directly using the Write tool. Structure it as a JSON array of claims with fields: id, statement, status (proposed/proved_draft/verified), dependencies (array of claim_ids), proof_file (path to proof markdown), goal_tags (array of "goal:<goal_id>" strings), type (theorem/lemma/definition/corollary), assumptions (array of labeled assumptions).
+
+When updating the claim graph, always read the current file first, modify the in-memory structure, and write the complete updated file back. Validate the DAG property after each update (no cycles, all dependency IDs exist).
+
 ## Required Outputs
-- Claim graph entries via `math_claim_graph_tool`
+- `math_workspace/claim_graph.json` -- the full claim graph as described above
 - `math_workspace/claim_design_notes.md` with Proof Strategy Summary for each must_accept claim: strategy family, topological proof order, key assumptions, blocking dependencies, fallback approach

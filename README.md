@@ -27,8 +27,11 @@ No Python, no dependencies, no API keys beyond Claude Code itself.
 ## Installation
 
 ```bash
-cp -r poggioai-msc-claude ~/.claude/skills/poggioai-msc-claude
+git clone https://github.com/PoggioAI/PoggioAI_MSc-claude.git
+cp -r PoggioAI_MSc-claude ~/.claude/skills/poggioai-msc-claude
 ```
+
+Then invoke with `/poggioai-msc-claude` in any Claude Code session.
 
 ---
 
@@ -82,14 +85,19 @@ The orchestrator reads `state.json` and picks up from the last completed phase.
 
 ## Quality mechanisms
 
-Six features distinguish this from "just asking Claude to write a paper":
+Eight features distinguish this from "just asking Claude to write a paper":
 
-1. **Persona debate** -- Three agents with competing objectives (feasibility vs. rigor vs. narrative) examine research plans before execution
+1. **Multi-round persona debate** -- Three agents with competing objectives (feasibility vs. rigor vs. narrative) debate for 3 rounds, getting HARDER each round. Minimum 2 rounds before any idea can proceed. No single-pass acceptance.
 2. **Adversarial novelty falsification** -- Literature review assigns every claim a status (OPEN / PARTIAL / KNOWN / EQUIVALENT_KNOWN) and blocks if core hypothesis is already known
-3. **Theory-experiment independence** -- Tracks share a decomposition but NOT continuous working context, preventing blind spot inheritance
-4. **Hard blockers** -- Reviewer enforces 5 binary checks (B1-B5). If any is true, score is capped at 4/10. No rubber-stamping.
-5. **Verify completion with stall detection** -- LLM-based goal assessment with 3-way routing and progress tracking across cycles
-6. **Modular writeup with loopback** -- Review failures route back through writeup and proofreading (max 3 retries) with specific feedback injection
+3. **Resumable literature review** -- Literature review works in batches and saves partial progress. If it times out, the orchestrator detects incomplete results and re-spawns the subagent to continue from where it left off — no work is lost.
+4. **Theory-experiment independence** -- Tracks share a decomposition but NOT continuous working context, preventing blind spot inheritance
+5. **Hard blockers** -- Reviewer enforces 5 binary checks (B1-B5). If any is true, score is capped at 4/10. No rubber-stamping.
+6. **Verify completion with stall detection** -- LLM-based goal assessment with 3-way routing and progress tracking across cycles
+7. **Modular writeup with loopback** -- Review failures route back through writeup and proofreading with specific feedback injection
+8. **Escalating review failure** -- The system does NOT just keep rewriting the same bad paper. Review gate has three escalation levels:
+   - Score 4-5 (editorial problems): loops back to writeup (1st failure), then all the way back to persona council ideation (2nd failure)
+   - Score ≤ 3 (fundamentally weak research): loops back to persona council immediately for full restart
+   - If a full ideation restart has already been attempted and fails again, the system finalizes and hands off to the human
 
 ---
 
@@ -129,6 +137,28 @@ poggioai-msc-claude/
 
 ---
 
+## The ~10-minute timeout problem and how we solve it
+
+Claude Code subagents can time out after approximately 10 minutes. This is a hard constraint of the platform — there is no way to extend it. For research phases that involve web search, proof construction, or paper writing, 10 minutes is often not enough.
+
+**Our solution: mandatory multi-pass execution with automatic resume.**
+
+Every phase runs in a resume loop. The orchestrator spawns the subagent, and when it returns (whether it finished or timed out), it checks the artifacts. If they're incomplete, it re-spawns the subagent with a `RESUME:` prefix so it continues from where it stopped. This happens automatically — no human intervention needed.
+
+Each phase has a minimum and maximum number of passes:
+
+| Phase | Min | Max | Why |
+|-------|-----|-----|-----|
+| Literature review | 2 | 5 | Web search is slow; multiple passes catch timeouts and deepen coverage |
+| Brainstorm | 2 | 5 | Deeper exploration produces better approaches |
+| Formalize goals | 2 | 5 | Validation and cross-checking need iteration |
+| Theory track (all 4 phases) | 2 | unbounded | Proofs often need multiple attempts; quality scales with iteration |
+| Experiment track (all 3 phases) | 2 | unbounded | Experiments may need reruns; verification improves with depth |
+| Writeup | 2 | 5 | Paper writing always benefits from revision |
+| Proofreading | 2 | 5 | More issues caught with each pass |
+
+This multi-pass approach also **improves quality**: even when the first pass completes successfully, the second pass reviews and refines the output. For theory and experiment phases, the system keeps iterating until it explicitly detects no further progress (stall detection).
+
 ## 30+ hour campaigns
 
 For long-running research campaigns, use Claude Code Desktop Scheduled Tasks:
@@ -137,7 +167,7 @@ For long-running research campaigns, use Claude Code Desktop Scheduled Tasks:
 /schedule poggioai-msc-claude to advance the campaign every 30 minutes
 ```
 
-Each invocation reads `state.json`, runs one or more phases, checkpoints, and exits. The scheduler re-invokes to advance the next phase. A full pipeline typically takes 10-20 phases across 5-10 hours of wall-clock time.
+Each invocation reads `state.json`, runs one or more phases (with multi-pass within each), checkpoints, and exits. The scheduler re-invokes to advance the next phase.
 
 Note: Scheduled tasks are session-scoped and auto-expire after 3 days. For campaigns longer than 3 days, re-create the schedule and use `--resume`.
 
@@ -201,6 +231,18 @@ Edit the Phase Routing Table and Gate Logic sections in `SKILL.md`. Key paramete
 - Verify completion ratios: 0.8 (complete), 0.5 (incomplete), <0.5 (rethink) -- in SKILL.md verify completion section
 - Review pass score: 6/10 -- in Gate 3 section
 - Hard blocker definitions: B1-B5 in `prompts/20-reviewer.md`
+
+---
+
+## Known issues and limitations
+
+These are known architectural issues with the multi-pass orchestration. They are documented here for transparency. Contributions addressing any of them are welcome.
+
+**1. Resume passes may overwrite good artifacts.** Pass 1 produces an artifact. Pass 2 gets a `RESUME:` prompt and is told to "refine." But the subagent may interpret "refine" as "rewrite from scratch," producing a worse version that overwrites the good one. The prompts say "do not restart" but Claude doesn't always follow that with long, complex outputs. A future fix would back up artifacts before each resume pass (`cp file.md file_pass1.md`).
+
+**2. Unbounded theory/experiment loops could burn excessive tokens.** Math prover and experiment phases have `max_passes: unbounded`. If a proof is genuinely hard, the system could loop many times with minimal progress. Stall detection checks whether artifacts changed between passes, but subtly different failed proofs may evade this check. Consider setting a hard cap (e.g., 10 passes) if you're cost-conscious.
+
+**3. Resume prompt may conflict with phase prompt.** The `RESUME (pass N):` prefix is prepended to the full phase prompt. But the phase prompt has its own "Process" section starting from step 1. The subagent might ignore the RESUME prefix and restart from step 1. We mitigate this by explicitly instructing "SKIP steps you already completed" in the resume prefix, but it's not foolproof.
 
 ---
 

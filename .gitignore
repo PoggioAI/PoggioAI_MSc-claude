@@ -2,6 +2,7 @@
 research-*/
 workspace/
 results/
+logs/
 
 # OS files
 .DS_Store

@@ -75,7 +75,7 @@ project_003/
     track_decomposition.json
     formalized_results.json
     copyedit_report.tex
-    paper.tex
+    final_paper.tex
     review_verdict.json
     ...
   math_workspace/             # theory track artifacts (if active)
@@ -157,7 +157,7 @@ PHASE 1: persona_council (3 DEBATE ROUNDS, minimum 2)
             Read novelty_flags.json. If any claim has status "KNOWN" that
             blocks the core hypothesis, the gate FAILS.
             Condition: no entry in novelty_flags.json has
-                       {"status": "KNOWN", "blocks_core": true}
+                       {"status": "KNOWN", "blocking": true}
             - PASS --> PHASE 3
             - FAIL --> loop to PHASE 1 (max 2 retries, then WARN and proceed)
 
@@ -169,10 +169,16 @@ PHASE 4: formalize_goals (5-node sequence)
                                    sets normal/degraded/minimal mode)
   4b: formalize_goals_agent     -- prompts/07-formalize-goals.md
        Produces: research_goals.json, track_decomposition.json
-  4c: research_plan_writeup     -- (uses formalize-goals context to write research plan narrative)
+  4c: research_plan_writeup     -- prompts/21-research-plan-writeup.md
        Produces: research_plan.md
   4d: track_decomposition_gate  -- validates track_decomposition.json structure
   4e: milestone_goals           -- human-in-the-loop checkpoint for research plan
+       This is a human checkpoint. Print a summary of the research goals and
+       track decomposition, then ask the user: "Research plan ready. Proceed
+       to execution? (yes/no)". If the user says no, loop back to Phase 3
+       (brainstorm). If yes, continue to track router. If running in
+       autonomous mode (no human present), auto-proceed after printing the
+       summary.
 
     --> ROUTE via track_router (conditional edges from milestone_goals):
         - theory_questions present  --> PHASE 5a (theory_track)
@@ -193,24 +199,39 @@ PHASE 5b: experiment_track (sequential sub-phases)
   5b.3: experiment_verify      -- prompts/14-experiment-verify.md
   Produces: experiment_plan.json, results/
 
-PHASE 5c: track_merge
+PHASE 5c: track_merge              -- prompts/22-track-merge.md
   Merges theory and experiment track outputs into unified results.
   Both theory_track and experiment_track feed into track_merge.
   If neither track was selected, track_merge is reached directly.
+  Produces: theory_track_summary.json, experiment_track_summary.json
 
-    --> PHASE 5d: verify_completion (3-way routing)
+    --> PHASE 5d: verify_completion (MANDATORY — DO NOT SKIP)
+        Prompt: prompts/23-verify-completion.md
+
+        *** YOU MUST RUN THIS PHASE. Do NOT proceed to formalize_results
+        without first running verify_completion and reading its output. ***
+
+        This is the ONLY place in the pipeline where the system decides whether
+        the research is good enough or needs more work. Skipping it means
+        shipping whatever came out of the tracks without any quality check.
+
         Assesses what percentage of research_goals have been met.
         Uses LLM to evaluate goal completion against execution evidence.
+        Produces: paper_workspace/verify_completion.json
+          (fields: recommendation ("COMPLETE"|"INCOMPLETE"|"RETHINK"), goals_met, ratio, reasoning)
 
-        THREE-WAY ROUTING:
-        - ratio >= 0.8 (or >=100% goals met, or stalled progress):
-              --> PHASE 6: formalize_results (COMPLETE)
-        - ratio >= 0.5 (some goals unmet):
-              --> loop to formalize_goals_agent (INCOMPLETE — retry, max 3)
+        After the subagent returns, READ verify_completion.json and act on
+        the recommendation field. Do NOT ignore it.
+
+        THREE-WAY ROUTING (read from verify_completion.json `recommendation` field):
+        - recommendation == "COMPLETE" (ratio >= 0.8, or stalled progress):
+              --> PHASE 6: formalize_results
+        - recommendation == "INCOMPLETE" (ratio >= 0.5, some goals unmet):
+              --> loop to formalize_goals_agent (retry, max 3)
               Injects failed goal summaries into the rework prompt.
               After 3 rework attempts, forces forward to formalize_results.
-        - ratio < 0.5 (fundamental failure):
-              --> loop to PHASE 3: brainstorm (RETHINK — fundamental redesign, max 3)
+        - recommendation == "RETHINK" (ratio < 0.5, fundamental failure):
+              --> loop to PHASE 3: brainstorm (fundamental redesign, max 3)
               After 3 brainstorm cycles, forces forward to formalize_results.
 
         STALL DETECTION: On 2nd+ cycle, if goals_met has not increased since
@@ -220,31 +241,34 @@ PHASE 5c: track_merge
 PHASE 6: formalize_results
   Produces: formalized_results.json
 
-    --> GATE: duality_check (if both tracks ran)
+    --> GATE: duality_check (MANDATORY if both tracks ran — DO NOT SKIP)
         Runs two checks (Practice + Rigor) on theory-experiment consistency.
         Read duality_check.json. Both check_a and check_b must pass.
         - PASS --> PHASE 7: resource_prep
-        - FAIL --> followup_lit_review --> PHASE 3: brainstorm
+        - FAIL --> followup_lit_review (prompts/24-followup-lit-review.md) --> PHASE 3: brainstorm
                    (max 2 retries, then WARN and proceed to PHASE 7)
         - If duality check is disabled or only one track ran:
               --> PHASE 7: resource_prep directly
 
 PHASE 7: resource_prep
-  Produces: resource_inventory.json, figures/, tables/
+  Produces: resource_inventory.tex, figures/, tables/
 
 PHASE 8: writeup
-  Produces: paper.tex
+  Produces: final_paper.tex
 
 PHASE 9: proofreading (2-node sequence)
   9a: proofreading_entry  -- task injection (checks for prior validation failures,
                              constructs targeted vs. full re-audit prompt)
   9b: proofreading_agent  -- prompts/19-proofreading.md
-  Produces: copyedit_report.tex, paper.tex (revised)
+  Produces: copyedit_report.tex, final_paper.tex (revised)
 
 PHASE 10: reviewer
   Produces: review_verdict.json
 
     --> milestone_review  -- human-in-the-loop checkpoint for review results
+        This is a human checkpoint before the validation gate. Print the
+        review_verdict.json summary (score, hard blockers). If running
+        autonomously, auto-proceed.
 
     --> GATE: validation_gate (review_quality)
         Read review_verdict.json.
@@ -295,6 +319,10 @@ Each phase has a corresponding prompt file in the `prompts/` directory relative 
 | writeup | `prompts/18-writeup.md` |
 | proofreading | `prompts/19-proofreading.md` |
 | reviewer | `prompts/20-reviewer.md` |
+| research_plan_writeup | `prompts/21-research-plan-writeup.md` |
+| track_merge | `prompts/22-track-merge.md` |
+| verify_completion | `prompts/23-verify-completion.md` |
+| followup_lit_review | `prompts/24-followup-lit-review.md` |
 
 The prompt files are located relative to **this skill file**. Construct the absolute path by taking the directory containing this SKILL.md and appending the prompt path. For example, if this skill is at `/path/to/poggioai-msc-claude/SKILL.md`, the prompt for brainstorm is at `/path/to/poggioai-msc-claude/prompts/06-brainstorm.md`.
 
@@ -324,26 +352,104 @@ Phase: <phase name>
 <prompt file content>
 ```
 
-### Step 4: Spawn the subagent
+### Step 4: Spawn the subagent (with mandatory multi-pass)
 
-Use the `Agent` tool to run the phase. Pass the constructed prompt as the agent's task. Each subagent is general-purpose (`subagent_type: "general-purpose"`). The subagent will use `Read`, `Write`, `Bash`, and other tools to produce its artifacts inside the workspace.
+Use the `Agent` tool to run the phase. Pass the constructed prompt as the agent's task. Each subagent is general-purpose (`subagent_type: "general-purpose"`).
+
+**CRITICAL: Multi-pass execution to prevent timeouts and improve quality.**
+
+Claude Code subagents can time out after ~10 minutes. To handle this AND to improve quality through iterative refinement, every phase runs in a **resume loop**:
+
+```
+For each phase:
+  pass_count = 0
+  while pass_count < max_passes:
+    pass_count += 1
+
+    If pass_count == 1:
+      Spawn subagent with the standard prompt
+    Else:
+      Spawn subagent with RESUME prefix:
+        "RESUME (pass {pass_count}/{max_passes}): Read all artifacts you produced
+         so far in the workspace. CHECK if your work is complete and meets quality
+         standards. If incomplete, CONTINUE from where you left off. If complete
+         but could be improved, REFINE your outputs. Save updated artifacts."
+
+    After subagent returns:
+      Check if required artifacts exist and are complete
+      If artifacts are complete AND pass_count >= min_passes:
+        Break (move to validation)
+      Else:
+        Continue loop (next pass will resume/refine)
+```
+
+**Pass limits per phase:**
+
+| Phase | Min passes | Max passes | Rationale |
+|-------|-----------|-----------|-----------|
+| persona_council | 1 | 1 | Already has 3 internal debate rounds |
+| literature_review | 2 | 5 | Web search is slow; resume catches timeouts |
+| brainstorm | 2 | 5 | Deeper exploration improves approach quality |
+| formalize_goals | 2 | 5 | Validation scripts need verification passes |
+| research_plan_writeup | 2 | 3 | Short phase, 2 passes ensure completeness |
+| math_literature | 2 | unbounded | Theory search depth matters |
+| math_proposer | 2 | unbounded | Claim graph quality improves with iteration |
+| math_prover | 2 | unbounded | Proofs often need multiple attempts |
+| math_verifier | 2 | unbounded | Verification thoroughness is critical |
+| experiment_design | 2 | 5 | Design benefits from refinement |
+| experimentation | 2 | unbounded | Experiments may need reruns |
+| experiment_verify | 2 | unbounded | Verification thoroughness matters |
+| track_merge | 2 | 3 | Summary quality improves with review |
+| verify_completion | 1 | 1 | Single assessment is sufficient |
+| formalize_results | 2 | 5 | Results synthesis benefits from review |
+| duality_check | 1 | 1 | Single check is sufficient |
+| resource_prep | 2 | 3 | Resource gathering may timeout |
+| writeup | 2 | 5 | Paper writing always benefits from revision |
+| proofreading | 2 | 5 | Catching more issues each pass |
+| reviewer | 1 | 1 | Single review is sufficient |
+
+**RESUME prompt template for pass 2+:**
+
+```
+RESUME (pass {N}/{max}): You are continuing work on the {phase_name} phase.
+
+Previous pass artifacts are already in the workspace at: {workspace_path}
+
+IMPORTANT: Do NOT restart from scratch. Do NOT re-execute the Process steps
+from the beginning. Instead:
+
+1. READ all artifacts you produced in previous passes (they are already on disk)
+2. CHECK completeness: are all required outputs present? Are they thorough?
+3. If INCOMPLETE: identify exactly what is missing and produce ONLY that.
+   Do not regenerate content that already exists and is good.
+4. If COMPLETE but improvable: make targeted improvements. Do not rewrite
+   from scratch — edit specific sections that need strengthening.
+5. SAVE updated artifacts. When refining, preserve the existing structure.
+
+SKIP any Process steps from the prompt below that you already completed in
+previous passes. Go directly to what needs work.
+
+Required outputs for this phase: {list of required artifacts}
+```
+
+For theory and experiment track phases with unbounded max passes, the orchestrator should keep looping until the subagent explicitly reports completion OR until artifacts stop changing between passes (stall detection: if artifacts are identical to previous pass, stop).
 
 ### Step 5: Validate outputs
 
-After the subagent returns, check that the expected output files exist. Use the `Read` tool or `Bash` (with `ls`) to verify. Each phase has specific expected outputs:
+After ALL passes complete for a phase, check that the expected output files exist. Use the `Read` tool or `Bash` (with `ls`) to verify. Each phase has specific expected outputs:
 
 - **persona_council**: `paper_workspace/research_proposal.md` must exist.
-- **literature_review**: `paper_workspace/literature_review.md` and `paper_workspace/novelty_flags.json` must exist.
-- **brainstorm**: `paper_workspace/brainstorm.json` must exist. If only `brainstorm.md` exists, note degraded mode.
+- **literature_review**: `paper_workspace/literature_review.md` and `paper_workspace/novelty_flags.json` must exist. **Partial completion check:** If `literature_review.md` exists but `novelty_flags.json` does NOT, or if `literature_review.md` contains fewer than 15 citation entries, the literature review is INCOMPLETE. Set `current_phase` back to `literature_review` (do NOT advance to the feasibility gate). When re-spawning the subagent, prepend to its prompt: `"RESUME: You previously produced a partial literature review at paper_workspace/literature_review.md. Read it, count the citations, and CONTINUE from where you left off. Do not restart. Your goal is to reach 20+ citations and produce novelty_flags.json."` This makes the orchestrator re-run the lit review subagent until the artifacts are complete.
+- **brainstorm**: `paper_workspace/brainstorm.json` must exist. If only `brainstorm.md` exists, note degraded mode. **Partial completion check:** If `brainstorm.json` does NOT exist but `brainstorm_partial.md` exists, the brainstorm is INCOMPLETE. Set `current_phase` back to `brainstorm` and re-spawn with `RESUME:` prefix: `"RESUME: You previously produced a partial brainstorm at paper_workspace/brainstorm_partial.md. Read it and CONTINUE from where you left off. Do not restart. Your goal is to produce brainstorm.json and brainstorm.md."`
 - **formalize_goals**: `paper_workspace/research_goals.json` and `paper_workspace/track_decomposition.json` must exist.
 - **theory track phases**: Check `math_workspace/claim_graph.json` after math_proposer; check `math_workspace/checks/` after math_verifier.
-- **experiment track phases**: Check `experiment_workspace/experiment_plan.json` after experiment_design; check `experiment_workspace/results/` after experimentation.
+- **experiment track phases**: Check `experiment_workspace/experiment_plan.json` after experiment_design; check `experiment_runs/` after experimentation.
 - **track_merge**: Merges track outputs. No specific artifact required.
-- **verify_completion**: Produces routing decision in `verify_completion_result` state field (not a file). Routes to formalize_results, formalize_goals_agent, or brainstorm depending on goal completion ratio.
+- **verify_completion**: `paper_workspace/verify_completion.json` must exist. Read its `recommendation` field to determine routing: `"COMPLETE"` routes to formalize_results, `"INCOMPLETE"` routes to formalize_goals_agent, `"RETHINK"` routes to brainstorm.
 - **formalize_results**: `paper_workspace/formalized_results.json` must exist.
-- **resource_prep**: `paper_workspace/resource_inventory.json` must exist.
-- **writeup**: `paper_workspace/paper.tex` must exist.
-- **proofreading**: `paper_workspace/paper.tex` must exist (revised) and `paper_workspace/copyedit_report.tex` should exist.
+- **resource_prep**: `paper_workspace/resource_inventory.tex` must exist.
+- **writeup**: `paper_workspace/final_paper.tex` must exist.
+- **proofreading**: `paper_workspace/final_paper.tex` must exist (revised) and `paper_workspace/copyedit_report.tex` should exist.
 - **reviewer**: `paper_workspace/review_verdict.json` must exist.
 
 If a critical artifact is missing, print a warning. Do not hard-fail; some phases can operate in degraded mode (e.g., formalize_goals without brainstorm.json uses minimal mode).
@@ -362,7 +468,7 @@ Gates are the control-flow checkpoints. When a gate fails, the pipeline loops ba
 
 **Trigger:** After Phase 2 (literature_review) completes.
 
-**Check:** Read `paper_workspace/novelty_flags.json`. Parse it as JSON. Look for any entry where `status` equals `"KNOWN"` and `blocks_core` equals `true`.
+**Check:** Read `paper_workspace/novelty_flags.json`. Parse it as JSON. Look for any entry where `status` equals `"KNOWN"` and `blocking` equals `true`.
 
 **Routing:**
 - If no blocking entries exist: **PASS**. Set `gates.feasibility_check = "passed"` in state. Proceed to Phase 3 (brainstorm).
@@ -372,22 +478,24 @@ Gates are the control-flow checkpoints. When a gate fails, the pipeline loops ba
 
 **Trigger:** After Phase 6 (formalize_results) completes, if both theory and experiment tracks ran.
 
-**Check:** Read `paper_workspace/duality_check.json`. Two sub-checks are performed (Practice and Rigor). Both `check_a.passed` and `check_b.passed` must be `true` (i.e., `both_passed` is `true`).
+**Producing the artifact:** Spawn a subagent with `prompts/16-duality-check.md`. The subagent reads `formalized_results.json`, `track_merge_summary.md`, and relevant workspace artifacts. It writes `paper_workspace/duality_check.json` with fields: `{check_a: {passed: bool, score: int, reasoning: str}, check_b: {passed: bool, score: int, reasoning: str}}`.
+
+**Check:** After the subagent returns, read `paper_workspace/duality_check.json`. If `check_a.passed` AND `check_b.passed` are both `true` then the gate passes. Otherwise it fails.
 
 **Routing:**
 - If `both_passed` is `true` or only one track ran (duality check skipped): **PASS**. Set `gates.duality_check = "passed"`. Proceed to Phase 7 (resource_prep). Inject duality check summary into the resource_prep context.
-- If either check fails: **FAIL**. Increment `retry_counts.duality_gate`. If the count is less than 2, route to **followup_lit_review** (a targeted literature review addressing the duality gaps), which then flows to Phase 3 (brainstorm). This is a two-step failure path: followup_lit_review --> brainstorm, NOT directly to brainstorm. If the count has reached 2, print a warning and continue to Phase 7.
+- If either check fails: **FAIL**. Increment `retry_counts.duality_gate`. If the count is less than 2, route to **followup_lit_review** (`prompts/24-followup-lit-review.md`, a targeted literature review addressing the duality gaps), which then flows to Phase 3 (brainstorm). This is a two-step failure path: followup_lit_review --> brainstorm, NOT directly to brainstorm. If the count has reached 2, print a warning and continue to Phase 7.
 
 ### Verify Completion (after track_merge)
 
 **Trigger:** After track_merge completes (Phase 5c).
 
-**Check:** Uses LLM to assess what percentage of research goals from `research_goals.json` have been met, evaluating against execution evidence from math_workspace, experiment_workspace, and agent outputs.
+**Check:** Spawn a subagent with `prompts/23-verify-completion.md`. The subagent reads `research_goals.json` and evaluates goal completion against execution evidence from math_workspace, experiment_workspace, and agent outputs. It writes `paper_workspace/verify_completion.json` with fields: `{recommendation, goals_met, ratio, reasoning}`. After the subagent returns, read `verify_completion.json` and route based on the `recommendation` field.
 
-**Routing (3-way):**
-- **ratio >= 0.8** (or stalled progress on re-entry): **COMPLETE**. Route to Phase 6 (formalize_results).
-- **ratio >= 0.5**: **INCOMPLETE**. Increment `verify_rework_attempts`. If count < 3, loop to formalize_goals_agent with failed goal summaries injected. If count >= 3, force forward to formalize_results.
-- **ratio < 0.5**: **RETHINK**. Increment `brainstorm_cycle`. If count < 3, loop to Phase 3 (brainstorm) with a fundamental redesign directive. If count >= 3, force forward to formalize_results.
+**Routing (3-way, based on `recommendation` field):**
+- **"COMPLETE"** (ratio >= 0.8, or stalled progress on re-entry): Route to Phase 6 (formalize_results).
+- **"INCOMPLETE"** (ratio >= 0.5): Increment `verify_rework_attempts`. If count < 3, loop to formalize_goals_agent with failed goal summaries injected. If count >= 3, force forward to formalize_results.
+- **"RETHINK"** (ratio < 0.5): Increment `brainstorm_cycle`. If count < 3, loop to Phase 3 (brainstorm) with a fundamental redesign directive. If count >= 3, force forward to formalize_results.
 
 **Stall detection:** On 2nd+ cycle, if `goals_met` has not increased since the previous verify_completion result, force forward to formalize_results regardless of ratio.
 
@@ -399,7 +507,11 @@ Gates are the control-flow checkpoints. When a gate fails, the pipeline loops ba
 
 **Routing:**
 - If `overall_score >= 6` AND (`hard_blockers` is empty or absent): **PASS**. Set `finished = true`. The pipeline is complete.
-- Otherwise: **FAIL**. Increment `retry_counts.review_gate`. If the count is less than 3, loop back to Phase 8 (writeup). Inject the review feedback into the writeup subagent prompt so it knows what to fix. If the count has reached 3, print a warning, set `finished = true`, and finalize.
+- If `overall_score <= 3` (very poor — fundamental problems, not just editorial): **DEEP FAIL**. This means the research itself is weak, not just the writing. Loop back to Phase 1 (persona_council) to restart ideation from scratch. Print: `[DEEP FAIL] Score <= 3. Research is fundamentally weak. Restarting from ideation.` If this is already the 2nd ideation cycle, finalize with a warning — the human must take over.
+- If `overall_score` is 4-5 (moderate problems, likely editorial): **FAIL**. Increment `retry_counts.review_gate`.
+  - **1st failure**: loop back to Phase 8 (writeup). Inject the review feedback so the writeup agent knows what to fix.
+  - **2nd failure**: the problem is deeper than editorial. Loop back to Phase 1 (persona_council) to restart ideation from scratch. Reset `retry_counts.review_gate` to 0. Print: `[ESCALATE] Two writeup retries failed. Restarting from ideation.`
+  - **If this is already the 2nd full ideation cycle** (i.e., we already restarted once): print a warning, set `finished = true`, and finalize with whatever we have. The human must take over.
 
 ---
 
@@ -498,6 +610,27 @@ Before spawning the proofreading_agent, the `proofreading_entry` node performs t
 
 ---
 
+## Context Preservation on Long Runs
+
+The orchestrator accumulates context with each subagent call. On very long runs (20+ subagent calls across multi-pass phases), this can degrade quality.
+
+**When to save and restart:** After the orchestrator completes a full cycle through the pipeline and a gate loops it back (e.g., review gate fails → loop to writeup, or duality gate fails → loop to brainstorm), save a context summary before continuing:
+
+1. Write `paper_workspace/orchestrator_context_summary.md` with:
+   - All gate results so far
+   - Current cycle number
+   - Key decisions made (track routing, verify_completion results, review scores)
+   - Which phases have completed and which are pending
+2. This summary is already captured in `state.json`, but the markdown version serves as a human-readable checkpoint AND as context for the orchestrator if it needs to re-orient after context gets long.
+
+**You do NOT need to do this after every phase.** Only save the context summary when:
+- A gate fails and the pipeline loops back to an earlier phase (this means a new cycle is starting)
+- The pipeline has completed 15+ subagent calls in the current session
+
+This keeps context manageable without adding overhead to the normal forward path.
+
+---
+
 ## Completion
 
 When `finished` is set to `true` in state (either by the review gate passing or by exhausting retries), print a completion banner:
@@ -513,10 +646,29 @@ When `finished` is set to `true` in state (either by the review gate passing or 
 ```
 
 Then print a short summary listing the key output files the user should look at:
-- `paper_workspace/paper.tex` -- the final paper
+- `paper_workspace/final_paper.tex` -- the final paper
 - `paper_workspace/review_verdict.json` -- the review assessment
 - `paper_workspace/research_goals.json` -- the formalized goals
 - `paper_workspace/formalized_results.json` -- the results summary
+
+---
+
+## Token Logging
+
+After EVERY subagent call, log the interaction to the workspace `logs/` directory:
+
+1. Create `logs/` directory in the workspace if it doesn't exist.
+2. For each phase, write a file `logs/phase_<N>_<phase_name>.jsonl` containing one JSON object per line:
+   ```json
+   {"timestamp": "ISO8601", "phase": "literature_review", "round": 1, "role": "system", "content": "<the prompt sent to the subagent>"}
+   {"timestamp": "ISO8601", "phase": "literature_review", "round": 1, "role": "assistant", "content": "<summary of what the subagent returned>"}
+   ```
+3. Also maintain a running `logs/token_summary.json`:
+   ```json
+   {"phases_completed": 5, "total_subagent_calls": 12, "phase_log": [{"phase": "persona_practical_round_1", "timestamp": "...", "artifacts_produced": ["persona_practical_round_1.md"]}, ...]}
+   ```
+
+This logging is for research and finetuning purposes. It should NOT slow down execution -- write logs AFTER each phase completes, not during.
 
 ---
 

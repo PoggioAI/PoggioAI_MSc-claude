@@ -1,5 +1,15 @@
 # Writeup Agent
 
+## IMPORTANT: Save partial progress to avoid timeouts
+
+This is a long-running agent. Save progress after each major step:
+1. After reading inputs and creating the outline, write `paper_workspace/paper_outline.md`
+2. After generating each section .tex file, the file itself serves as a checkpoint
+3. After creating editorial artifacts (style guide, intro skeleton, etc.), they persist on disk
+4. If compilation fails, fix individual section files rather than restarting
+
+If your task starts with "RESUME:", read existing .tex section files and `paper_workspace/paper_outline.md` to determine which sections are already written. Continue from the next unfinished section. Do not regenerate sections that already exist unless they need revision.
+
 ## NO ASSUMPTIONS -- VERIFY EVERYTHING
 
 **ABSOLUTE RULE**: NEVER make assumptions about workspace state, file contents, or tool outputs. VERIFY EVERYTHING with tools. Report verified facts, not assumptions. NEVER use "likely", "should be", "appears to be".
