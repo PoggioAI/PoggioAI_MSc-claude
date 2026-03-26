@@ -1,0 +1,29 @@
+{
+  "campaign_id": "",
+  "workspace": "",
+  "task": "",
+  "current_phase": "persona_council",
+  "phase_status": "pending",
+  "completed_phases": [],
+  "failed_phases": [],
+  "cycle": 0,
+  "max_cycles": 3,
+  "track_decomposition": null,
+  "persona_verdicts": {
+    "practical": null,
+    "rigor": null,
+    "narrative": null
+  },
+  "novelty_flags": {},
+  "review_score": null,
+  "review_retries": 0,
+  "feasibility_retries": 0,
+  "duality_retries": 0,
+  "verify_rework_attempts": 0,
+  "brainstorm_cycle": 0,
+  "verify_completion_result": null,
+  "verify_completion_history": [],
+  "total_phases_run": 0,
+  "started_at": "",
+  "last_checkpoint": ""
+}
