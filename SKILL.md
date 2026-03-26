@@ -270,11 +270,14 @@ PHASE 10: reviewer
         review_verdict.json summary (score, hard blockers). If running
         autonomously, auto-proceed.
 
-    --> GATE: validation_gate (review_quality)
+    --> GATE: validation_gate (review_quality — ESCALATING)
         Read review_verdict.json.
         Condition: overall_score >= 6 AND hard_blockers is empty or absent.
         - PASS --> DONE (set finished = true)
-        - FAIL --> loop to PHASE 8 (max 3 retries, then finalize with warning)
+        - DEEP FAIL (score <= 3) --> loop to PHASE 1 (persona_council, full ideation restart)
+        - FAIL 1st time (score 4-5) --> loop to PHASE 8 (writeup, editorial fix)
+        - FAIL 2nd time (score 4-5) --> loop to PHASE 1 (persona_council, full ideation restart)
+        - If already on 2nd ideation cycle --> finalize with warning, human takes over
 ```
 
 ---
