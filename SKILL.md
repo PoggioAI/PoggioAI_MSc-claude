@@ -672,9 +672,9 @@ When constructing subagent prompts for theory track phases, inject structured go
 
 ## Persona Council Details (Phase 1)
 
-Phase 1 runs **3 debate rounds** before producing a final proposal. This is critical — a single pass lets weak ideas through. Multiple rounds force the personas to sharpen their critiques and the synthesis to genuinely address them.
+Phase 1 runs **3 to 5 debate rounds** before producing a final proposal. This is critical — a single pass lets weak ideas through. Multiple rounds force the personas to sharpen their critiques and the synthesis to genuinely address them.
 
-### Round structure (repeat 3 times)
+### Round structure (3 rounds minimum, up to 5 if needed)
 
 For each round:
 
@@ -694,7 +694,7 @@ For each round:
 When spawning persona subagents for Rounds 2 and 3, prepend this context to their prompt:
 
 ```
-This is debate round N of 3. You have already reviewed this proposal in previous rounds.
+This is debate round N of up to 5. You have already reviewed this proposal in previous rounds.
 Your previous evaluation is in: paper_workspace/persona_<name>_round_<N-1>.md
 The proposal was revised after your feedback: paper_workspace/research_proposal.md
 
@@ -703,9 +703,15 @@ or merely papered over. Raise NEW concerns you missed before. Do not repeat prai
 for things already acknowledged.
 ```
 
-### When to exit early
+### When to exit and when to extend
 
-If ALL THREE personas return ACCEPT in the same round, you may exit after that round (minimum 2 rounds). Do NOT exit after Round 1 even if all accept — one round is never enough.
+After Round 3, check the verdicts from that round:
+
+- **ALL THREE accept in Round 3**: Exit. Proposal is ready.
+- **Any persona still REJECTS after Round 3**: Extend to Rounds 4 and 5. The synthesis must specifically address the rejecting persona's concerns. Continue until Round 5.
+- **After Round 5**: Exit regardless. If personas still reject, proceed anyway — the concerns are documented in the round files and will inform later phases.
+
+Do NOT exit before Round 3 even if all accept early — three rounds is the minimum.
 
 ### Artifacts produced
 
