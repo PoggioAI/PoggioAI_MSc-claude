@@ -1,4 +1,4 @@
-# PoggioAI/MSc-claude
+# pAI/MSc-claude
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
