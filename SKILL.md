@@ -44,6 +44,8 @@ After the user chooses, ask for the research task (unless resuming):
 
 **If new project:** Ask "What is your research hypothesis or task?" (or accept it as the skill argument if one was provided, e.g. `/poggioai-msc-claude "Investigate whether..."`). Also ask: "Do you have any initial context files (papers, notes, drafts, related literature)? If so, provide the folder path." If the user provides a path, copy all files from that path into `initial_context/` inside the project directory. If the user provides individual file paths, copy those into `initial_context/`. These files will be available to all phases as background context. Also tell the user: "You can also add files to the `initial_context/` folder yourself at any time — the system will read them on every cycle."
 
+**Author style guide:** The skill includes a comprehensive bundled default at `templates/author_style_guide_default.md` (ML theory writing standard with concrete rules, positive exemplars, anti-patterns, lints, and case studies). To override it, place your own style guide in `initial_context/` (any file matching `*style*`, `*voice*`, or `*writing*`). Your guide takes absolute priority over the bundled default. If you provide one, the bundled default is still read for any topics your guide doesn't cover.
+
 **If resuming:** Read `state.json` from the chosen folder and print a resume banner.
 
 ### Example flow
@@ -351,7 +353,28 @@ PHASE 6: formalize_results
 PHASE 7: resource_prep
   Produces: resource_inventory.tex, figures/, tables/
 
+PHASE 7b: pre_writeup_council (2 debate rounds — advisory, not blocking)
+  The three personas re-evaluate the formalized results + resource inventory.
+  Same structure as Phase 1 persona_council but with 2 rounds only.
+  Each round: 3 persona subagents (practical, rigor, narrative) + synthesis.
+  Personas read: research_proposal.md, formalized_results.json, resource_inventory.tex.
+  Per-round outputs: paper_workspace/pre_writeup_persona_{name}_round_{N}.md
+  After round 2: synthesis writes paper_workspace/pre_writeup_synthesis.md.
+  If ANY persona has concerns after round 2, write them to
+  review_{ideation_cycle+1}/pre_writeup_concerns.md so the human can see them.
+  This phase is advisory — pipeline ALWAYS proceeds to 7c after 2 rounds.
+
+PHASE 7c: narrative_voice (Narrative Architect solo round)
+  Prompt: prompts/25-narrative-voice.md
+  The Narrative Architect reads all pre-writeup persona outputs + formalized
+  results + resource inventory and produces paper_workspace/narrative_brief.md.
+  This brief sets the voice and tone for the paper. The writeup agent MUST
+  read it before starting Pass 1.
+  Produces: paper_workspace/narrative_brief.md
+
 PHASE 8: writeup
+  MUST read paper_workspace/narrative_brief.md before Pass 1 (if it exists).
+  MUST check initial_context/ for user-provided author style guide.
   Produces: final_paper.tex
 
 PHASE 9: proofreading (2-node sequence)
@@ -460,6 +483,7 @@ Each phase has a corresponding prompt file in the `prompts/` directory relative 
 | track_merge | `prompts/22-track-merge.md` |
 | verify_completion | `prompts/23-verify-completion.md` |
 | followup_lit_review | `prompts/24-followup-lit-review.md` |
+| narrative_voice | `prompts/25-narrative-voice.md` |
 
 The prompt files are located relative to **this skill file**. Construct the absolute path by taking the directory containing this SKILL.md and appending the prompt path. For example, if this skill is at `/path/to/poggioai-msc-claude/SKILL.md`, the prompt for brainstorm is at `/path/to/poggioai-msc-claude/prompts/06-brainstorm.md`.
 
@@ -721,6 +745,57 @@ After all rounds complete:
 - `paper_workspace/persona_narrative_round_1.md` through `round_3.md`
 - `paper_workspace/research_proposal.md` (final synthesis)
 - `paper_workspace/novelty_assessment.json`
+
+---
+
+## Pre-Writeup Council Details (Phase 7b)
+
+Phase 7b re-spawns the three personas for a 2-round advisory evaluation. Unlike Phase 1 (which evaluates research direction), Phase 7b evaluates whether the formalized results and resources are ready for writing.
+
+### Prompt reuse
+Use the SAME persona prompts as Phase 1 (`01-persona-practical.md`, `02-persona-rigor.md`, `03-persona-narrative.md`, `04-persona-synthesis.md`) but with different context injection.
+
+### Context injection for Phase 7b
+
+Prepend this to each persona prompt:
+
+```
+PHASE 7b: PRE-WRITEUP COUNCIL (Round N of 2)
+
+You are now evaluating the FORMALIZED RESULTS and RESOURCES before the paper
+is written. This is different from Phase 1 — the research direction is settled.
+Your job is to assess whether the results tell a coherent, publishable story.
+
+Read these files:
+- paper_workspace/research_proposal.md — the finalized research direction
+- paper_workspace/formalized_results.json — what was actually found
+- paper_workspace/resource_inventory.tex — available figures, tables, content
+
+Evaluate:
+1. Are the results coherent with the research proposal?
+2. Are there surprises or inconsistencies worth highlighting in the narrative?
+3. Do the available resources adequately support the claims?
+4. What narrative framing or voice concerns should the writeup address?
+
+This is ADVISORY — your feedback informs the narrative brief but does not
+block the pipeline. Be constructive and specific.
+```
+
+For Round 2, also prepend:
+```
+Your Round 1 evaluation is in: paper_workspace/pre_writeup_persona_<name>_round_1.md
+Check whether your prior concerns are still valid. Raise any new issues.
+```
+
+### Round structure (2 rounds fixed)
+
+1. **Round 1:** Each persona evaluates formalized results + resources. Writes `paper_workspace/pre_writeup_persona_{name}_round_1.md`.
+2. **Round 2:** Each persona reviews Round 1 feedback. Writes `paper_workspace/pre_writeup_persona_{name}_round_2.md`.
+3. **Synthesis:** Writes `paper_workspace/pre_writeup_synthesis.md` aggregating all concerns and recommendations.
+
+### After Phase 7b
+
+If ANY persona expressed concerns, write them to `review_{ideation_cycle+1}/pre_writeup_concerns.md` for the human to review later. Then ALWAYS proceed to Phase 7c (narrative_voice).
 
 ---
 

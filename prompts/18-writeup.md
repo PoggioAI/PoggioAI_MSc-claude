@@ -6,13 +6,25 @@ You will be called multiple times. Each pass does ONE thing. A full writing cycl
 
 ### First cycle (passes 1-6): Draft
 
-**Pass 1:** Read all inputs. Create `paper_workspace/paper_outline.md` with the full section structure. Create editorial artifacts (style guide, intro skeleton, macros, reader contract). This pass produces NO .tex content — only planning.
+**Pass 1:** Read all inputs and establish the writing standard. This pass produces NO .tex content — only planning.
 
-**Pass 2:** Write Related Work and Background/Preliminaries section .tex files. Update references.bib.
+**Author style guide priority (3-tier):**
+1. **Check `initial_context/`** for a user-provided style guide (any file matching `*style*`, `*voice*`, or `*writing*`). If found, this is the **highest authority** — it overrides everything else. The paper must sound like this guide says.
+2. **Read the bundled default** at `templates/author_style_guide_default.md` (relative to this skill's root directory). This is a comprehensive ML theory writing standard with concrete rules, positive exemplars, anti-patterns, lints, and case studies. It is your baseline writing standard. Always read it.
+3. **Read `paper_workspace/narrative_brief.md`** if it exists (from Phase 7c). This adds paper-specific voice guidance: surprise markers, related work framing, discussion blueprint.
+
+**Combine them into the operative `paper_workspace/author_style_guide.md`:**
+- If user provided a guide: use it as the primary voice, supplement with the bundled default for anything not covered (lints, anti-patterns, abstract rules), and add narrative brief paper-specific items.
+- If no user guide: use the bundled default as primary, add narrative brief specifics.
+- The bundled default contains detailed rules for abstracts, related work, introductions, theorems, proofs, conclusions, and a self-audit checklist. Follow ALL of them.
+
+Then create remaining editorial artifacts: `paper_outline.md`, `intro_skeleton.tex`, `style_macros.tex`, `reader_contract.json`, `editorial_contract.md`, `theorem_map.json`, `revision_log.md`.
+
+**Pass 2:** Write Related Work and Background/Preliminaries section .tex files. Update references.bib. Follow the Related Work voice rules below — this section must be an opinionated narrative, not a flat catalogue.
 
 **Pass 3:** Write the main technical sections (Methods, Theory, Experiments — whatever applies). This is the heaviest pass. Save each section .tex file as you finish it.
 
-**Pass 4:** Write Discussion, Conclusion, Abstract, and Introduction. (Introduction and Abstract come LAST because they summarize the paper — you cannot write a good intro without knowing what the paper contains.)
+**Pass 4:** Write Discussion, Conclusion, Abstract, and Introduction. (Introduction and Abstract come LAST because they summarize the paper — you cannot write a good intro without knowing what the paper contains.) Follow the Abstract voice rules and Discussion voice rules below.
 
 **Pass 5:** Assemble `final_paper.tex` with `\input{}` structure linking all sections. Attempt first compilation. Identify all errors and write `paper_workspace/compilation_fix_plan.md` listing each error and how to fix it.
 
@@ -122,6 +134,48 @@ Required editorial behavior:
 - Do not restate the same claim in multiple sections unless necessary for local context.
 - Define key terms once, then refer by labels.
 - Keep proof sketches in main text short; place heavy derivations in appendix files.
+
+### Narrative Brief (MUST READ BEFORE WRITING)
+If `paper_workspace/narrative_brief.md` exists, read it before Pass 1. It contains binding voice guidance from the Narrative Architect:
+- **Surprise markers**: 2-4 specific places where genuine authorial judgment should appear ("Surprisingly,...", "One might expect X, but..."). Use these sparingly — only where indicated.
+- **Related work framing**: How to organize the related work as an opinionated narrative.
+- **Discussion blueprint**: Honest limitations, genuine open questions, and carefully hedged conjectures.
+The narrative brief's guidance is binding unless it contradicts a user-provided author style guide in `initial_context/`.
+
+### Abstract Voice Rules (MANDATORY — Pass 4)
+The abstract is a hook, not a summary table. Follow these rules:
+- **NO citations** in the abstract. Zero. Remove any `\cite`, `\citet`, `\citep`.
+- **NO theorem/lemma/proposition references** (`\ref{...}`). The reader hasn't seen them yet.
+- **NO formulas** unless the formula IS the paper's one-line main result and it's elegant. Default: no formulas.
+- **Limit numbers** to 2-3 headline figures that tell the story. Not "1.57× (mean; range 1.29--2.02×)" — just "~1.5× larger."
+- **NO "Our contributions are N-fold"** opener. The robotic framing ("threefold", "fourfold") must go. Numbered contributions are fine if they flow naturally, but lead with the story, not a count.
+- **Structure**: (1) The problem/question that matters (1-2 sentences), (2) What we did and found (the story, ~4-5 sentences), (3) Why it matters (1 sentence).
+
+### Related Work Voice Rules (MANDATORY — Pass 2)
+Related work is an OPINIONATED NARRATIVE, not a catalogue.
+- **Organize by intellectual theme**, not by author. Group works by the idea they share, then explain how that idea relates to yours.
+- **Include genuine critique**: "however, this requires assumption X which fails in our setting", "while elegant, this framework does not extend to..."
+- **Avoid** the repeating pattern: "Author1 did X. Author2 did Y. We do Z." — this is the #1 AI tell in related work sections.
+- Each paragraph should have a **POINT** — what does this group of work collectively tell us, and where does it fall short?
+- Positioning against prior work should feel like **intellectual engagement**, not mechanical differentiation.
+- If the narrative brief provides related work framing, follow it.
+
+### Discussion Voice Rules (MANDATORY — Pass 4)
+- The discussion must have **genuine intellectual honesty** about limitations — not a formulaic "future work" list.
+- The conclusion must NOT restate the abstract.
+- The discussion CAN explain why results point to far-reaching conjectures, as long as they are framed as "this may point to..." or "these results suggest..." — NEVER as "this proves..." or "we have shown that..." when the evidence is indirect.
+- Include genuine open questions the authors find interesting, not boilerplate.
+
+### General Voice Rules (MANDATORY — all passes)
+These rules apply to ALL writing in every section:
+- **Vary sentence length.** Mix short punchy sentences with longer flowing ones. Monotonous ~20-word sentences are an AI tell.
+- **Vary paragraph structure.** Not every paragraph should follow topic sentence → explanation → conclusion.
+- **Avoid transition word chains**: "Furthermore,... Moreover,... Additionally,..." — vary connectives or drop them entirely.
+- **Be confident where evidence is strong.** Be genuinely uncertain where it isn't. Don't hedge uniformly.
+- **"It is important to note that..."** → just state the thing.
+- **"It is worth mentioning that..."** → just mention it.
+- **Perfect parallelism** in every list is an AI tell. Natural asymmetry is fine.
+- Use genuine authorial judgment ("Surprisingly,...", "One might expect X, but...") ONLY in the 2-4 places identified by the narrative brief's surprise markers. Do not overdo it.
 
 ### Citation Workflow
 - **MANDATORY**: Use `[cite: description]` placeholder format for all citations during writing. LaTeXCompilerTool automatically detects all `[cite: ...]` placeholders, searches for citations using CitationSearchTool (arXiv + Semantic Scholar), adds found citations to references.bib, and replaces `[cite: description]` with `\cite{key}`.

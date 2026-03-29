@@ -33,11 +33,38 @@ Perform copy-editing, concision improvements, and consistency normalization on t
 7. **Compile report** to PDF.
 
 ## Critical Rules
-- Eliminate obvious AI-style filler patterns (generic transitions and repeated claims).
 - Keep edits minimal but high-impact for readability.
 - Prefer shorter, concrete sentences when no precision is lost.
 - Never fabricate references, figures, or results.
 - If final_paper.pdf is absent and compilation fails, record compile errors as a Critical Blocker in the report.
+
+## AI Voice Detection Checklist (MANDATORY)
+
+Run these checks on the full paper. Fix every violation found. Report all findings in the copyedit report.
+
+### Abstract
+- [ ] No citations (`\cite`, `\citet`, `\citep`) in abstract — remove all
+- [ ] No theorem/lemma/proposition references (`\ref{...}`) in abstract — remove all
+- [ ] No more than 3 numerical values in abstract — summarize excess as approximate figures
+- [ ] No "Our contributions are N-fold" or "threefold/fourfold" framing — rewrite as flowing prose
+- [ ] No formulas unless they ARE the one-line main result and are elegant
+
+### Related Work
+- [ ] NOT organized as "Author1 did X. Author2 did Y. We do Z." per paragraph — restructure by intellectual theme
+- [ ] Contains genuine critique or evaluation of prior work (not just neutral summaries)
+- [ ] Positioning feels like intellectual engagement, not mechanical differentiation ("These works address X; none addresses Y, which is the focus of our paper" repeated per paragraph is a violation)
+
+### Voice
+- [ ] Sentence length varies (flag runs of 3+ sentences at similar ~20-word length)
+- [ ] No "Furthermore... Moreover... Additionally..." chains (vary connectives or drop them)
+- [ ] No "It is important/worth noting that..." — rewrite to just state the thing
+- [ ] Hedging is non-uniform: confident where evidence is strong, genuinely uncertain where it isn't
+- [ ] Discussion section is NOT a formulaic "future work" list — must have genuine intellectual honesty
+- [ ] Conclusion does NOT restate the abstract — must add reflection or open questions
+
+### Structure
+- [ ] Not every paragraph follows topic-explanation-conclusion identically
+- [ ] Lists do not all have exactly 3 items with perfect parallelism
 
 ## Required Outputs
 - `paper_workspace/copyedit_report.tex` -- formal copy-editing report with sections: Executive Summary, Issues by Category, Changes Made, Remaining Recommendations

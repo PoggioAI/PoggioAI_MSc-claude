@@ -35,6 +35,12 @@ Be adversarial-but-constructive. Prioritize scientific clarity, rigor, concision
 - **B5**: Theoretical claims lack assumptions or cannot be traced to accepted claim artifacts (when math workflow artifacts exist).
   **B5 lookup procedure**: If `paper_workspace/theory_track_summary.json` exists, read it and for each theorem in the paper check the `goal_coverage` map for a claim at `verified_numeric` or `verified_symbolic` status. Any theorem without a matching entry triggers B5. This check must be performed by reading the actual JSON file, not by assumption.
 
+### ai_voice_risk Assessment (concrete criteria)
+Assign `ai_voice_risk` using these rules:
+- **HIGH** if ANY of: abstract contains citations or `\ref{}` references; abstract uses "Our contributions are N-fold"; related work is a flat catalogue (Author did X / Author did Y / We do Z pattern); 3+ "Furthermore/Moreover/Additionally" chains in the paper; conclusion restates the abstract; discussion is a formulaic "future work" list.
+- **MEDIUM** if ANY of: sentence length is too uniform across paragraphs; hedging is mechanical and uniform; some paragraphs follow identical topic-explanation-conclusion structure; lists all have exactly 3 items with perfect parallelism.
+- **LOW** if: prose varies naturally in length and structure, voice feels authored with genuine judgment, related work has opinion and critique.
+
 ### Scoring Policy (strict)
 - Overall >= 8 only if paper is genuinely strong, concise, and publication-ready in style/structure.
 - If ai_voice_risk == "high", cap overall_score at 6.
