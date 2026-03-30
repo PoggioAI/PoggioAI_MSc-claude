@@ -37,11 +37,29 @@ Then invoke with `/poggioai-msc-claude` in any Claude Code session.
 
 ## Usage
 
-### Inline task
+### Standard mode (default)
 
 ```
 /poggioai-msc-claude "Investigate whether neural scaling laws exhibit phase transitions analogous to thermodynamic critical phenomena"
 ```
+
+### Explore mode (`--explore`)
+
+```
+/poggioai-msc-claude --explore "What is the implicit bias of polar optimizers in underdetermined regression?"
+```
+
+Explore mode runs **2-5 exploration cycles** (full pipeline each, using explore-specific prompts that treat failed proofs as discoveries and run experiments with extreme skepticism), then **1 final standard cycle** that crystallizes the discoveries into a paper. Total: 3-6 full pipeline passes.
+
+Use explore mode when you have a **direction** rather than a **hypothesis** — when you want the system to discover what's true, not just confirm what you hope.
+
+| Feature | Standard | Explore |
+|---------|----------|---------|
+| Math track | Prove the theorem | Investigate: prove, disprove, counterexample, find boundary |
+| Experiment track | Validate hypothesis | Discover: run broadly, read critically, follow up on surprises |
+| Theory-experiment interaction | Independent, merge at end | Cross-pollinate after each cycle |
+| Full pipeline cycles | 1 | 2-5 explore + 1 standard |
+| CPU experiments | Ask human | Run automatically (< 30 min, no GPU) |
 
 ### From a task file
 

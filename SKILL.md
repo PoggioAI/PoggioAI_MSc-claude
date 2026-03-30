@@ -40,6 +40,8 @@ When this skill is invoked, you MUST first ask the user where to work. Use the A
 1. **"New project"** — Create a new `project_NNN` folder in `~/Desktop/Experiments/PoggioAI-results/`. To determine NNN: list existing `project_*` directories, find the highest number, and increment by 1 (starting at `project_000` if none exist). Create the directory immediately.
 2. **"Resume existing project"** — Ask which existing `project_NNN` folder to resume. List available folders. Read its `state.json` and continue from the last completed phase.
 
+**Mode detection:** Check if the user invoked with `--explore` (e.g., `/poggioai-msc-claude --explore "Investigate..."`). If so, set `"mode": "explore"` in state.json. Otherwise, `"mode": "default"`. In explore mode, the pipeline runs 2-5 exploration cycles (Phases 1→6 using explore-specific prompts), then 1 final standard cycle that crystallizes the discoveries into a paper.
+
 After the user chooses, ask for the research task (unless resuming):
 
 **If new project:** Ask "What is your research hypothesis or task?" (or accept it as the skill argument if one was provided, e.g. `/poggioai-msc-claude "Investigate whether..."`). Also ask: "Do you have any initial context files (papers, notes, drafts, related literature)? If so, provide the folder path." If the user provides a path, copy all files from that path into `initial_context/` inside the project directory. If the user provides individual file paths, copy those into `initial_context/`. These files will be available to all phases as background context. Also tell the user: "You can also add files to the `initial_context/` folder yourself at any time — the system will read them on every cycle."
@@ -352,6 +354,10 @@ PHASE 6: formalize_results
 
 PHASE 7: resource_prep
   Produces: resource_inventory.tex, figures/, tables/
+  NOTE: If duality_check.json exists (from Gate 2), inject its findings
+  into the resource_prep context. The orchestrator should prepend:
+  "Duality check results are in paper_workspace/duality_check.json.
+  Read it for theory-experiment consistency findings."
 
 PHASE 7b: pre_writeup_council (2 debate rounds — advisory, not blocking)
   The three personas re-evaluate the formalized results + resource inventory.
@@ -402,6 +408,20 @@ PHASE 11: persona_post_review (THE VERY LAST STEP — only reached after validat
   The three personas are re-spawned to review the COMPLETED, VALIDATED paper.
   They run 2 debate rounds on the actual final_paper.tex.
 
+  **Context injection for Phase 11 personas:** When spawning each persona
+  subagent for Phase 11, prepend this to their prompt (BEFORE the persona
+  prompt file content):
+  ```
+  PHASE 11: POST-REVIEW ASSESSMENT
+
+  You are now reviewing the COMPLETED paper, not a research proposal.
+  Read the full paper at paper_workspace/final_paper.tex.
+  Also read paper_workspace/review_verdict.json for the reviewer's score and feedback.
+
+  Your task: evaluate the FINISHED paper from your persona's perspective.
+  Is this ready for submission? What would you change?
+  ```
+
   Each persona reads final_paper.tex and writes their assessment to
   paper_workspace/post_review_persona_<name>_round_<N>.md
 
@@ -436,6 +456,110 @@ PHASE 11: persona_post_review (THE VERY LAST STEP — only reached after validat
 
     --> DONE (set finished = true)
 ```
+
+---
+
+## Explore Mode (`--explore`)
+
+When `mode == "explore"`, the pipeline structure changes. Instead of one pass through Phases 1-11, the system runs **2-5 exploration cycles** (Phases 1→6), then **1 final standard cycle** (Phases 1→11 using normal prompts) that crystallizes the discoveries into a paper.
+
+**Total cycles: min 3 (2 explore + 1 standard), max 6 (5 explore + 1 standard).**
+
+### Explore cycle routing (replaces standard Phases 5a-5d)
+
+During exploration cycles, the following substitutions apply:
+
+| Standard Phase | Explore Replacement | Prompt |
+|---|---|---|
+| Phase 5a: theory track (4 agents) | Math Explorer (1 agent, iterative) | `prompts/30-math-explorer.md` |
+| Phase 5b: experiment track (3 agents) | Experiment Explorer (1 agent, iterative) | `prompts/31-experiment-explorer.md` |
+| — (does not exist in standard) | Cross-Pollinator (NEW, after 5a+5b) | `prompts/32-cross-pollinator.md` |
+| Phase 5d: verify_completion | Explore Evaluator (full persona re-evaluation) | `prompts/33-explore-evaluator.md` |
+
+### Explore cycle flow
+
+```
+EXPLORE CYCLE N (of 2-5):
+  Phase 1: Persona Council (with accumulated discoveries as context)
+  Phase 2: Literature Review
+  Phase 3: Brainstorm
+  Phase 4: Formalize Goals
+  Phase 5a: Math Explorer (prompts/30-math-explorer.md)
+  Phase 5b: Experiment Explorer (prompts/31-experiment-explorer.md)
+  Phase 5c: Cross-Pollinator (prompts/32-cross-pollinator.md)
+  Phase 5d: Explore Evaluator (prompts/33-explore-evaluator.md)
+    → CONTINUE: loop to Phase 1 (increment explore_cycle)
+    → CONVERGED: exit explore loop
+
+FINAL STANDARD CYCLE (the +1):
+  Phase 1-11: Full standard pipeline using normal prompts
+  Takes ALL discoveries from explore cycles as input context
+  Produces the final paper
+```
+
+### Explore cycle exit rules (orchestrator enforces these)
+
+- **Cycle 1**: ALWAYS continue (override any CONVERGED verdict). Min 2 exploration cycles.
+- **Cycles 2-4**: Honor the Explore Evaluator's verdict. CONVERGED if all 3 personas agree AND one says "strong story."
+- **Cycle 5**: ALWAYS converge (override any CONTINUE verdict). Max 5 exploration cycles.
+
+### Context injection for explore cycles 2+
+
+When restarting Phase 1 in an explore cycle (cycle 2+), prepend to ALL persona prompts:
+
+```
+EXPLORE MODE — CYCLE {N} of up to 5
+
+This is NOT a fresh start. You are revisiting the research direction after
+{N-1} cycles of theory and experiment exploration.
+
+Read these files for accumulated discoveries:
+- math_workspace/exploration_log_cycle_*.md (all theory discoveries)
+- experiment_workspace/exploration_log_cycle_*.md (all experiment discoveries)
+- paper_workspace/cross_pollination_cycle_*.md (theory-experiment connections)
+- paper_workspace/explore_evaluation_cycle_{N-1}.md (last evaluation + direction)
+
+Given what we've discovered, your job is to:
+a) Propose the next investigation angle
+b) Identify what's most promising to deepen
+c) Flag if we have enough for a strong paper
+```
+
+### Context injection for the final standard cycle
+
+When starting the final standard cycle (after explore converges), prepend to ALL prompts:
+
+```
+FINAL CYCLE — CRYSTALLIZING DISCOVERIES INTO A PAPER
+
+The exploration phase is complete. You now have {N} cycles of discoveries.
+Your job is to take these discoveries and produce a rigorous, publication-quality paper.
+
+All exploration logs are in math_workspace/ and experiment_workspace/.
+Cross-pollination reports are in paper_workspace/cross_pollination_cycle_*.md.
+The final explore evaluation is in paper_workspace/explore_evaluation_cycle_{N}.md.
+
+Use the STANDARD prompts (not explore prompts) for this cycle.
+Focus on establishing and formalizing the most interesting discoveries.
+```
+
+### Experiment execution rule (explore mode)
+
+- **CPU-only, short experiments** (< 30 min, no GPU, standard Python): Run them automatically. Execute with Bash. Don't ask.
+- **GPU, long-running, or special hardware**: Ask the human. Print requirements and wait.
+
+### State tracking for explore mode
+
+Add to state.json when mode is "explore":
+```json
+"mode": "explore",
+"explore_cycle": 0,
+"explore_max_cycles": 5,
+"explore_evaluations": [],
+"explore_converged": false
+```
+
+Increment `explore_cycle` after each exploration cycle completes. When `explore_converged` is set to `true`, the next cycle uses standard prompts (the final +1 cycle).
 
 ---
 
@@ -484,6 +608,10 @@ Each phase has a corresponding prompt file in the `prompts/` directory relative 
 | verify_completion | `prompts/23-verify-completion.md` |
 | followup_lit_review | `prompts/24-followup-lit-review.md` |
 | narrative_voice | `prompts/25-narrative-voice.md` |
+| math_explorer (explore mode) | `prompts/30-math-explorer.md` |
+| experiment_explorer (explore mode) | `prompts/31-experiment-explorer.md` |
+| cross_pollinator (explore mode) | `prompts/32-cross-pollinator.md` |
+| explore_evaluator (explore mode) | `prompts/33-explore-evaluator.md` |
 
 The prompt files are located relative to **this skill file**. Construct the absolute path by taking the directory containing this SKILL.md and appending the prompt path. For example, if this skill is at `/path/to/poggioai-msc-claude/SKILL.md`, the prompt for brainstorm is at `/path/to/poggioai-msc-claude/prompts/06-brainstorm.md`.
 
