@@ -55,6 +55,7 @@ Before restarting:
 - Increment `ideation_cycle` in state
 - Set `finished` back to `false`
 - Reset all `retry_counts` to 0
+- Reset `narrative_veto_count` to 0
 - Clear `phase_history`
 - Set `current_phase` to `persona_council`
 - Restart from Phase 1

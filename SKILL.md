@@ -85,6 +85,8 @@ On first run, create `state.json` in the workspace root:
   "phase_history": [],
   "gates": {},
   "retry_counts": { "novelty_gate": 0, "duality_gate": 0, "review_gate": 0 },
+  "ideation_cycle": 0,
+  "narrative_veto_count": 0,
   "verify_rework_attempts": 0,
   "brainstorm_cycle": 0,
   "verify_completion_result": null,

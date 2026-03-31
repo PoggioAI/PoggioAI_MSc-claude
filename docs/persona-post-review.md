@@ -29,9 +29,11 @@ After 2 rounds, synthesis writes `paper_workspace/post_review_synthesis.md` with
 
 ## Narrative Architect veto
 
+Track the veto count using `narrative_veto_count` in state.json. Increment it each time the Narrative Architect rejects.
+
 - **ALL THREE accept**: DONE. Set finished = true. Print completion banner.
-- **Narrative Architect REJECTS (1st time)**: Loop back to Phase 8 (writeup) with the Narrative Architect's feedback injected. Then re-run proofreading (Phase 9), reviewer (Phase 10), validation gate, and persona_post_review again.
-- **Narrative Architect REJECTS (2nd time)**: Do NOT loop back. Write all remaining concerns to `review_{ideation_cycle+1}/`:
+- **Narrative Architect REJECTS (narrative_veto_count == 1)**: Loop back to Phase 8 (writeup) with the Narrative Architect's feedback injected. Then re-run proofreading (Phase 9), reviewer (Phase 10), validation gate, and persona_post_review again.
+- **Narrative Architect REJECTS (narrative_veto_count >= 2)**: Do NOT loop back. Write all remaining concerns to `review_{ideation_cycle+1}/`:
   - `review_N/narrative_concerns.md`
   - `review_N/practical_concerns.md`
   - `review_N/rigor_concerns.md`
