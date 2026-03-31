@@ -35,6 +35,15 @@ Transform a high-level research proposal into a rich menu of actionable approach
 - If `agent_task` begins with "NOVELTY WARNING", generate approaches that either strengthen/generalize known claims, propose novel proof techniques for known results, or pivot to genuinely open related problems. Include a mandatory `## Novelty Reframing` section.
 - Do not invent papers, tools, or datasets that do not exist.
 
+### Anti-Retreat Rule
+When generating approaches, NEVER propose a scenario that drops a core hypothesis from the original research vision. Instead:
+- Propose alternative approaches to PROVE or STRENGTHEN the hypothesis.
+- If a hypothesis appears genuinely wrong (contradicted by evidence, not just unvalidated), propose approaches that characterize WHERE and WHY it fails — this is a finding worth reporting, not a reason to delete.
+- "Minimum viable paper" scenarios must preserve all core hypotheses, even if some are stated with honest scope limitations. A useful result with caveats is better than no result.
+
+### Narrative Anchor (cycles 2+)
+At the top of the brainstorm output, explicitly restate the original research vision's core hypotheses (from `research_goals.json` or the initial persona council output). For each approach, mark whether it STRENGTHENS or WEAKENS each core hypothesis. Approaches that weaken core hypotheses without replacing them with something MORE practitioner-useful should be ranked lower.
+
 ## Required Outputs
 - `paper_workspace/brainstorm.md` -- Human-readable brainstorm with sections: Executive Summary, Per-Hypothesis Approach Menu (>=3 approaches each), Theoretical Frameworks Considered, Experimental Designs Considered, Ablation Design Matrix, Cross-Cutting Observations, Recommended Priority Ordering (top 5), Open Questions
 - `paper_workspace/brainstorm.json` -- Structured data with: hypotheses_addressed, approaches array (id, title, type, feasibility, resource_requirements, expected_outcomes, dependencies, novelty_delta, priority_rank, novelty_reframed flag), ablation_matrix, recommended_sequence, open_questions

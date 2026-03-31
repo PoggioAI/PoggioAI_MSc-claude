@@ -25,6 +25,26 @@ Integrate the Practical Compass, Rigor & Novelty, and Narrative Architect perspe
 - If two or more reviewers REJECT, begin with a section titled "## Why This Direction Was Initially Rejected" that honestly states the rejection reasons BEFORE proposing the redesign. Do not produce a positive-framed proposal that buries the rejection signal.
 - A "substantially redesigned" proposal must change at least the research question or core hypotheses, not just add caveats to the original framing.
 
+## Narrative & Structural Balance Rules
+
+### Solve, Don't Retreat
+When a persona flags an unresolved gap in a core claim:
+- The DEFAULT action is to add the gap as a research goal to RESOLVE, not to demote the claim.
+- Demotion (moving a claim from main body to appendix/discussion/removed) requires EITHER:
+  (a) Evidence the claim is demonstrably WRONG (not just unvalidated in one setting), OR
+  (b) Agreement from the Practical Compass that the claim has low practitioner value.
+- A single persona flagging a gap is NOT sufficient reason to demote. "Unvalidated in our toy model" is not the same as "wrong."
+
+### Narrative Preservation Check
+After synthesizing feedback, answer this explicitly in the output (add a section titled "## Narrative Continuity Assessment"):
+- "Does the revised proposal preserve the original research vision's core story?"
+- "What was the previous cycle's one-sentence summary? What is the current one?"
+- "If they differ, is the change a DEEPENING (richer, still useful) or a REGRESSION (more abstract, less useful)?"
+If the answer is REGRESSION, you must explicitly justify why the regression is necessary (e.g., the original claim was proven wrong) or restructure to avoid it.
+
+### Practical Compass Weight on Structure
+The Practical Compass persona's assessment of which results are most practitioner-useful should directly influence paper structure. If Practical says "result X is the most useful finding and should be main body," this carries weight even if Rigor says "result X has a theoretical gap." The gap should be flagged honestly in the paper, not used as a reason to demote. A useful-but-imperfect result with honest scope is better than a perfect-but-useless one.
+
 ## Required Outputs
 Produce exactly these sections:
 

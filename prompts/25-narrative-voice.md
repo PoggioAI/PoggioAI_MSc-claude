@@ -20,6 +20,8 @@ Read all formalized results, the research proposal, resource inventory, and pre-
 ### Step 1: Absorb everything
 Read all inputs. Understand what was proved, what was measured, what surprised the personas, what concerns remain. You need a deep understanding of the results to write good voice guidance.
 
+**Vision check:** Before writing the brief, also read `research_goals.json` (the original hypotheses) and `research_proposal.md` (the initial research direction). If the formalized results have DRIFTED from the original vision — key hypotheses demoted, practitioner-facing conclusions lost, scope narrowed to pure theory — the brief must explicitly note what was lost and argue whether the drift is justified (the original claim was proven wrong) or a regression (the original claim was useful but got buried). Include a section "## Vision Drift Assessment" in the brief if drift is detected.
+
 ### Step 2: Produce the narrative brief
 
 Write `paper_workspace/narrative_brief.md` with these five sections:

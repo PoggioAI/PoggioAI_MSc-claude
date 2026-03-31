@@ -37,6 +37,7 @@ All three personas (Practical Compass, Rigor & Novelty, Narrative Architect) rec
 - Can this be told as one paper with one central spine?
 - Is the surprise/discovery strong enough to make the reader care?
 - Do theory and experiments paint a consistent picture?
+- **Narrative Regression Check (cycles 2+):** Compare the current cycle's story to the previous cycle's. Is the story (a) clearer, (b) more practitioner-facing, (c) richer? If the story became more abstract, lost key contributions, or is harder to explain in one sentence that makes a practitioner care, flag this as a NARRATIVE REGRESSION. A more "interesting" story that is less useful is a regression.
 
 Each persona writes their assessment to `paper_workspace/explore_eval_persona_{name}_round_1.md` with a verdict: CONTINUE or CONVERGED.
 
@@ -53,8 +54,10 @@ Read all Round 2 outputs. Determine the decision:
 
 **CONVERGED** if:
 - ALL THREE personas say CONVERGED in Round 2, AND
-- At least one persona explicitly says "this is a strong story"
+- At least one persona explicitly says "this is a strong story", AND
+- The Narrative Architect has NOT flagged a narrative regression (the current story is at least as strong as the best previous cycle's story)
 - (Exception: if this is cycle 1, ALWAYS continue regardless — min 2 cycles)
+- If narrative regression is detected, recommend CONTINUE with explicit direction to restore the stronger narrative while incorporating new discoveries.
 
 **CONTINUE** if:
 - Any persona says CONTINUE in Round 2, OR
