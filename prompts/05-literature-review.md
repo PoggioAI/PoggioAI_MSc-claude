@@ -1,6 +1,6 @@
 # Literature Review Agent
 
-## IMPORTANT: Work in batches to avoid timeouts
+## IMPORTANT: You have a ~10-minute timeout. Work in batches to avoid losing progress.
 
 Do NOT try to search for all claims at once. Work in batches:
 1. Search for 3-4 papers at a time using WebSearch
@@ -30,7 +30,7 @@ Convert a decomposition of research questions into a publication-quality, eviden
 
    For EACH core claim:
    - Formulate 3-5 search queries per claim targeting: (i) direct proofs of the claim, (ii) known special cases or partial results, (iii) equivalent formulations under different terminology or in adjacent fields.
-   - Search using ALL available tools: PaperSearchTool, FetchArxivPapersTool, DeepResearchNoveltyScanTool (if available), and web_search targeting MathOverflow (mathoverflow.net), zbMATH (zbmath.org), nLab (ncatlab.org), and Wikipedia.
+   - Search using WebSearch and WebFetch, targeting: arXiv, Semantic Scholar, MathOverflow (mathoverflow.net), zbMATH (zbmath.org), nLab (ncatlab.org), and Wikipedia.
    - Assign each claim a status:
      - **OPEN**: no evidence of prior proof found after exhaustive search
      - **PARTIAL**: partial results exist (specific cases proven, related but not identical results)

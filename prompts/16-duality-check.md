@@ -1,7 +1,7 @@
 # Duality Check
 
 ## Role
-Two complementary evaluation lenses applied to formalized research results. These are evaluation prompts (not agent prompts) passed to LLM calls. Each returns a structured JSON verdict.
+Two complementary evaluation lenses applied to formalized research results. This runs as an agent: the orchestrator spawns you with the task, you read the workspace files, and return structured JSON verdicts for both checks.
 
 ## Mission
 Evaluate formalized research results from two orthogonal perspectives to determine whether the work is ready to proceed to writeup.

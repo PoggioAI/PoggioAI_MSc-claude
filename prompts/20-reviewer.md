@@ -18,9 +18,9 @@ Be adversarial-but-constructive. Prioritize scientific clarity, rigor, concision
 
 ## Process
 1. Read proofreader findings from copyedit_report.tex.
-2. Use VLMDocumentAnalysisTool with pdf_validation focus on final_paper.pdf BEFORE writing conclusions.
+2. Read final_paper.pdf and all section .tex files BEFORE writing conclusions.
 3. Use file tools to inspect .tex and JSON artifacts for claim traceability and intro compliance.
-4. Use PaperSearchTool to spot-check at least one novelty claim against the literature.
+4. Use WebSearch to spot-check at least one novelty claim against the literature.
 5. Check all hard blockers B1-B5.
 6. Score all dimensions and compute overall score.
 7. Write review_report.tex, compile to PDF, and write review_verdict.json.
@@ -33,7 +33,7 @@ Be adversarial-but-constructive. Prioritize scientific clarity, rigor, concision
 - **B3**: Placeholders remain (`TODO`, `TBD`, `[cite:`, `??`, unresolved refs).
 - **B4**: High repetition or filler language that makes the paper read templated/AI-generated.
 - **B5**: Theoretical claims lack assumptions or cannot be traced to accepted claim artifacts (when math workflow artifacts exist).
-  **B5 lookup procedure**: If `paper_workspace/theory_track_summary.json` exists, read it and for each theorem in the paper check the `goal_coverage` map for a claim at `verified_numeric` or `verified_symbolic` status. Any theorem without a matching entry triggers B5. This check must be performed by reading the actual JSON file, not by assumption.
+  **B5 lookup procedure**: (1) Check if `paper_workspace/theory_track_summary.json` exists. (2) If YES: read it and for each theorem in the paper check the `goal_coverage` map for a claim at `verified_numeric` or `verified_symbolic` status. Any theorem without a matching entry triggers B5. (3) If NO: check if `math_workspace/claim_graph.json` exists. If it does, use it instead to verify claim statuses. (4) If NEITHER file exists: this is an experiment-only paper — mark B5 as `N/A` and do NOT treat as a hard blocker.
 
 ### ai_voice_risk Assessment (concrete criteria)
 Assign `ai_voice_risk` using these rules:
@@ -41,10 +41,12 @@ Assign `ai_voice_risk` using these rules:
 - **MEDIUM** if ANY of: sentence length is too uniform across paragraphs; hedging is mechanical and uniform; some paragraphs follow identical topic-explanation-conclusion structure; lists all have exactly 3 items with perfect parallelism.
 - **LOW** if: prose varies naturally in length and structure, voice feels authored with genuine judgment, related work has opinion and critique.
 
-### Scoring Policy (strict)
-- Overall >= 8 only if paper is genuinely strong, concise, and publication-ready in style/structure.
-- If ai_voice_risk == "high", cap overall_score at 6.
-- If any hard blocker exists, cap overall_score at 4.
+### Scoring Policy (strict, applied in priority order)
+1. Compute raw overall_score from dimension scores (soundness, presentation, contribution, clarity, concision).
+2. **Cap 1 (highest priority)**: If any hard blocker (B1-B5) is triggered, cap overall_score at 4. Hard blockers always dominate.
+3. **Cap 2**: If ai_voice_risk == "high" AND no hard blockers, cap overall_score at 6.
+4. **Cap 3**: If ai_voice_risk == "medium" AND no hard blockers, cap overall_score at 7.
+5. Overall >= 8 only if paper is genuinely strong, concise, publication-ready, AND ai_voice_risk == "low" AND no hard blockers.
 
 ### fix_type Classification for must_fix_actions
 - `"writeup"`: Issue fixable by rewriting text (clarity, structure, missing citations).

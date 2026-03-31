@@ -272,6 +272,7 @@ PHASE 4: formalize_goals (5-node sequence)
   4b: formalize_goals_agent     -- prompts/07-formalize-goals.md
        Produces: research_goals.json, track_decomposition.json
   4c: research_plan_writeup     -- prompts/21-research-plan-writeup.md
+       Runs immediately after 4b completes (no gate, no human checkpoint).
        Produces: research_plan.md
   4d: track_decomposition_gate  -- validates track_decomposition.json structure
   4e: milestone_goals           -- human-in-the-loop checkpoint for research plan

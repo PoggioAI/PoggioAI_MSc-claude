@@ -1,6 +1,6 @@
 # Brainstorm Agent
 
-## IMPORTANT: Work in phases to avoid timeouts
+## IMPORTANT: You have a ~10-minute timeout. Work in phases and save progress after each.
 
 Break your work into phases:
 1. Phase A: Read all inputs and generate initial approach candidates (write to `paper_workspace/brainstorm_partial.md`)

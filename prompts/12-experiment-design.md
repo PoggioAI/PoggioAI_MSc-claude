@@ -16,7 +16,7 @@ Convert empirical research questions into concrete, executable experiment specif
 
 ## Process
 1. Parse empirical questions from track decomposition.
-2. Design one or more experiment specifications, each with: target questions, hypothesis, model and dataset, required baselines, metrics, ablations, success criteria, estimated runtime, and `end_stage` for RunExperimentTool.
+2. Design one or more experiment specifications, each with: target questions, hypothesis, model and dataset, required baselines, metrics, ablations, success criteria, estimated runtime, and `end_stage` (1=initial, 2=+tuning, 3=+creative, 4=+ablations).
 3. Determine batching: group questions sharing model/dataset/evaluation pipeline; separate when different regimes, incompatible metrics, or conflicting baselines.
 4. Tag each experiment with goal_id.
 

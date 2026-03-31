@@ -1,6 +1,6 @@
 # Formalize Goals Agent
 
-## IMPORTANT: Work in phases to avoid timeouts
+## IMPORTANT: You have a ~10-minute timeout. Work in phases and save progress after each.
 
 Break your work into phases:
 1. Phase A: Read all inputs and extract candidate goals (write to `paper_workspace/goals_partial.json`)
@@ -40,7 +40,7 @@ Convert the brainstorm's menu of approaches into a formal research program: numb
 
 ## Programmatic Validation (MANDATORY)
 
-After writing `research_goals.json` and `track_decomposition.json`, run the following validation scripts using PythonCodeExecutionTool. Fix any errors before returning.
+After writing `research_goals.json` and `track_decomposition.json`, perform the following validation checks by reading both files and verifying programmatically. Fix any errors before returning.
 
 ### Validation 1 -- Dependency DAG Check
 Verify no goal depends on an unknown goal or a higher-indexed goal (forward reference violation). Load `research_goals.json`, iterate goals, check that every dependency ID exists and has a lower index.
@@ -51,7 +51,11 @@ Load `brainstorm.json` and `research_goals.json`. Verify every `approach_id` ref
 ### Validation 3 -- Track Decomposition Self-Consistency
 Load `track_decomposition.json`. Verify: if recommended_track includes theory, theory_questions is non-empty; if recommended_track includes empirical, empirical_questions is non-empty; recommended_track is one of the four allowed values ("theory", "empirical", "both", "none").
 
-## Follow-Up Cycle Behavior
+## Follow-Up Cycle Behavior (different from RESUME:)
+
+**Two re-entry paths exist — do not confuse them:**
+- `RESUME:` = timeout recovery. You timed out mid-work. Read `goals_partial.json` and continue from the next incomplete phase.
+- `VERIFY COMPLETION: INCOMPLETE` = pipeline re-entry. The verify_completion gate found unmet goals. Read the failed goal list and rework only those goals.
 
 If your `agent_task` begins with `VERIFY COMPLETION: INCOMPLETE`, you are on a re-entry cycle because one or more goals failed. You MUST follow this procedure:
 

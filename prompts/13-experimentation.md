@@ -10,8 +10,8 @@ Read experiment_design.json, produce executable experiment code and instructions
 
 You cannot rely on external experiment execution tools. Instead, for each experiment:
 1. **Always produce**: `experiment_workspace/experiment_spec.py` (executable Python script with all hyperparameters, data generation, and training code) and `experiment_workspace/run_instructions.md` (step-by-step instructions for the human).
-2. **If the experiment is simple enough** (synthetic data, small model, runs in < 5 minutes): you MAY write and execute the script using the Bash tool. Capture all stdout/stderr and save metrics to `experiment_workspace/execution_log.json`.
-3. **If the experiment requires significant compute** (large datasets, GPU training, long runtimes): write the complete script but do NOT execute it. Mark the experiment as `status: "spec_ready"` in execution_log.json and note estimated runtime.
+2. **Run it yourself if ALL of these are true**: (a) CPU-only (no GPU required), (b) estimated runtime < 5 minutes, (c) uses only standard Python libraries (numpy, scipy, torch-cpu, scikit-learn), (d) uses synthetic or small-scale data. Execute with Bash, capture all stdout/stderr, save metrics to `experiment_workspace/execution_log.json`.
+3. **Write spec only (do NOT execute) if ANY of these are true**: requires GPU, estimated runtime > 5 minutes, needs large datasets or external data downloads, needs special hardware. Mark the experiment as `status: "spec_ready"` in execution_log.json and note estimated runtime in `experiment_workspace/run_instructions.md`.
 
 ## Inputs
 - `experiment_workspace/experiment_design.json` (primary driver)

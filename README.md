@@ -101,6 +101,131 @@ The orchestrator reads `state.json` and picks up from the last completed phase.
 
 ---
 
+## Pipeline routing graph
+
+How to read these diagrams: rectangles are agents/phases, diamonds are gates (conditional routing), hexagons are human checkpoints, and the stadium shape is the terminal state. Loopback edges show where the pipeline re-routes on failure, with conditions and retry limits on each edge.
+
+### Standard mode
+
+```mermaid
+flowchart TD
+    %% ── Ideation ──
+    P1["<b>1. Persona Council</b><br/><i>3 personas × 3 rounds</i>"]
+    P2["<b>2. Literature Review</b>"]
+    G1{"<b>Feasibility Gate</b><br/>novelty_flags.json"}
+    P3["<b>3. Brainstorm</b>"]
+    P4["<b>4. Formalize Goals</b><br/><i>entry → agent → plan writeup → decomp gate</i>"]
+    HC1{{"<b>Human Checkpoint</b><br/>Research plan approval"}}
+    TR{"<b>Track Router</b>"}
+
+    P1 --> P2 --> G1
+    G1 -->|"PASS"| P3
+    G1 -->|"KNOWN blocking<br/>(max 2 retries)"| P1
+    P3 --> P4 --> HC1 --> TR
+
+    %% ── Execution ──
+    P5a["<b>5a. Theory Track</b><br/><i>math lit → proposer →<br/>prover → verifier</i>"]
+    P5b["<b>5b. Experiment Track</b><br/><i>design → run → verify</i>"]
+    P5c["<b>5c. Track Merge</b>"]
+    P5d{"<b>5d. Verify Completion</b><br/>3-way routing"}
+
+    TR -->|"theory only"| P5a --> P5c
+    TR -->|"experiments only"| P5b --> P5c
+    TR -->|"both tracks"| P5a & P5b
+    P5b --> P5c
+    TR -->|"neither"| P5c
+    P5c --> P5d
+
+    P5d -->|"COMPLETE<br/>ratio ≥ 0.8"| P6
+    P5d -->|"INCOMPLETE<br/>ratio ≥ 0.5<br/>(max 3 reworks)"| P4
+    P5d -->|"RETHINK<br/>ratio < 0.5<br/>(max 3 cycles)"| P3
+
+    %% ── Synthesis ──
+    P6["<b>6. Formalize Results</b>"]
+    G2{"<b>Duality Gate</b><br/>theory-experiment<br/>consistency"}
+    FLR["Followup Lit Review"]
+
+    P6 --> G2
+    G2 -->|"PASS"| P7
+    G2 -->|"single track"| P7
+    G2 -->|"FAIL"| FLR -->|"max 2 retries"| P3
+
+    %% ── Paper ──
+    P7["<b>7. Resource Prep</b>"]
+    P7b["<b>7b. Pre-Writeup Council</b><br/><i>advisory, 2 rounds</i>"]
+    P7c["<b>7c. Narrative Voice Brief</b>"]
+    P8["<b>8. Writeup</b>"]
+    P9["<b>9. Proofreading</b>"]
+    P10["<b>10. Reviewer</b>"]
+    G3{"<b>Validation Gate</b><br/>review score +<br/>hard blockers"}
+
+    P7 --> P7b --> P7c --> P8 --> P9 --> P10 --> G3
+
+    G3 -->|"score ≥ 6<br/>no blockers"| P11
+    G3 -->|"score 4-5<br/>1st fail"| P8
+    G3 -->|"score 4-5<br/>2nd fail"| P1
+    G3 -->|"score ≤ 3<br/>deep fail"| P1
+
+    %% ── Final ──
+    P11["<b>11. Persona Post-Review</b><br/><i>3 personas × 2 rounds</i>"]
+    HC2{{"<b>Final Checkpoint</b>"}}
+    DONE(["<b>Done</b>"])
+
+    P11 -->|"all accept"| HC2 --> DONE
+    P11 -->|"Narrative rejects<br/>1st time"| P8
+    P11 -->|"Narrative rejects<br/>2nd time"| DONE
+
+    %% ── Styles ──
+    classDef gate fill:#fff3cd,stroke:#856404
+    classDef checkpoint fill:#d1ecf1,stroke:#0c5460
+    classDef phase fill:#d4edda,stroke:#155724
+    classDef terminal fill:#f8d7da,stroke:#721c24
+
+    class G1,G2,G3,P5d,TR gate
+    class HC1,HC2 checkpoint
+    class P1,P2,P3,P4,P5a,P5b,P5c,P6,P7,P7b,P7c,P8,P9,P10,P11,FLR phase
+    class DONE terminal
+```
+
+### Explore mode (`--explore`)
+
+Explore mode runs 2-5 exploration cycles using discovery-oriented prompts, then one final standard cycle (Phases 1-11 above) to crystallize findings into a paper.
+
+```mermaid
+flowchart TD
+    subgraph EXPLORE ["Explore Cycle (repeats 2-5×)"]
+        direction TB
+        EP1["<b>1. Persona Council</b><br/><i>+ accumulated discoveries</i>"]
+        EP2["<b>2. Literature Review</b>"]
+        EP3["<b>3. Brainstorm</b>"]
+        EP4["<b>4. Formalize Goals</b>"]
+        EP5a["<b>5a. Math Explorer</b><br/><i>iterative, treats failures<br/>as discoveries</i>"]
+        EP5b["<b>5b. Experiment Explorer</b><br/><i>extreme skepticism</i>"]
+        EP5c["<b>5c. Cross-Pollinator</b><br/><i>theory ↔ experiment</i>"]
+        EP5d{"<b>5d. Explore Evaluator</b><br/>persona re-evaluation"}
+
+        EP1 --> EP2 --> EP3 --> EP4
+        EP4 --> EP5a --> EP5b --> EP5c --> EP5d
+    end
+
+    EP5d -->|"CONTINUE<br/>cycle 1: always<br/>cycles 2-4: if not converged"| EP1
+    EP5d -->|"CONVERGED<br/>all 3 personas agree<br/>cycle 5: forced"| FSC
+
+    FSC["<b>Final Standard Cycle</b><br/><i>Phases 1-11 with all<br/>explore discoveries as context</i>"]
+    EDONE(["<b>Done</b>"])
+    FSC --> EDONE
+
+    classDef gate fill:#fff3cd,stroke:#856404
+    classDef phase fill:#e2d9f3,stroke:#4a235a
+    classDef terminal fill:#f8d7da,stroke:#721c24
+
+    class EP5d gate
+    class EP1,EP2,EP3,EP4,EP5a,EP5b,EP5c,FSC phase
+    class EDONE terminal
+```
+
+---
+
 ## Quality mechanisms
 
 Eight features distinguish this from "just asking Claude to write a paper":

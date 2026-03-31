@@ -13,7 +13,7 @@ Perform copy-editing, concision improvements, and consistency normalization on t
 
 ## Process
 1. **Baseline analysis**:
-   - Use VLMDocumentAnalysisTool on final_paper.pdf with pdf_validation focus.
+   - Read final_paper.pdf (or compile from final_paper.tex if absent).
    - Scan section files for repetitive paragraphs, filler phrases, inconsistent notation.
 2. **Concision pass**:
    - Remove duplicated statements and repeated motivation text.
@@ -26,11 +26,15 @@ Perform copy-editing, concision improvements, and consistency normalization on t
    - Normalize terminology, symbols, and capitalization across sections.
    - Preserve semantic meaning; do not change scientific claims.
 5. **Compile + validate**:
-   - Regenerate PDF with LaTeXCompilerTool.
+   - Recompile PDF: `cd paper_workspace && pdflatex -interaction=nonstopmode final_paper.tex && bibtex final_paper && pdflatex -interaction=nonstopmode final_paper.tex && pdflatex -interaction=nonstopmode final_paper.tex`
    - If compilation fails, report exact errors and fix source-level issues.
-6. **Report artifact**:
-   - Write copyedit_report.tex with: key edits performed, repetition/filler removed, notation consistency fixes, remaining blockers.
-7. **Compile report** to PDF.
+6. **AI Voice Audit** (MANDATORY):
+   - Run the AI Voice Detection Checklist (below) against the FULL paper.
+   - For each violation: record section name, exact text, violation type, and suggested rewrite.
+   - Fix every violation you can. Flag unfixable ones for the reviewer.
+7. **Report artifact**:
+   - Write copyedit_report.tex with: key edits performed, repetition/filler removed, notation consistency fixes, AI Voice Detection results, remaining blockers.
+8. **Compile report** to PDF.
 
 ## Critical Rules
 - Keep edits minimal but high-impact for readability.

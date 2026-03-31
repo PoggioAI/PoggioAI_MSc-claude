@@ -9,14 +9,18 @@ You will be called multiple times. Each pass does ONE thing. A full writing cycl
 **Pass 1:** Read all inputs and establish the writing standard. This pass produces NO .tex content — only planning.
 
 **Author style guide priority (3-tier):**
-1. **Check `initial_context/`** for a user-provided style guide (any file matching `*style*`, `*voice*`, or `*writing*`). If found, this is the **highest authority** — it overrides everything else. The paper must sound like this guide says.
+1. **Check `initial_context/`** (a directory at the project root, alongside `math_workspace/` and `experiment_workspace/`) for a user-provided style guide. Search for any file matching `*style*`, `*voice*`, or `*writing*`. If found, this is the **highest authority** — it overrides everything else. The paper must sound like this guide says.
 2. **Read the bundled default** at `templates/author_style_guide_default.md` (relative to this skill's root directory). This is a comprehensive ML theory writing standard with concrete rules, positive exemplars, anti-patterns, lints, and case studies. It is your baseline writing standard. Always read it.
 3. **Read `paper_workspace/narrative_brief.md`** if it exists (from Phase 7c). This adds paper-specific voice guidance: surprise markers, related work framing, discussion blueprint.
 
 **Combine them into the operative `paper_workspace/author_style_guide.md`:**
-- If user provided a guide: use it as the primary voice, supplement with the bundled default for anything not covered (lints, anti-patterns, abstract rules), and add narrative brief paper-specific items.
-- If no user guide: use the bundled default as primary, add narrative brief specifics.
-- The bundled default contains detailed rules for abstracts, related work, introductions, theorems, proofs, conclusions, and a self-audit checklist. Follow ALL of them.
+
+Write the merged file with this structure:
+1. If user guide exists: copy its content verbatim as the first section ("## User Style Guide").
+2. Add "## Bundled Defaults" section with all rules from `templates/author_style_guide_default.md` that are NOT already covered by the user guide (lints, anti-patterns, abstract rules, proof writing rules, self-audit checklist).
+3. Add "## Paper-Specific Voice" section with items from `narrative_brief.md` (surprise markers, related work framing, discussion blueprint).
+4. **Conflict resolution**: If the user guide and bundled default contradict (e.g., user says "always cite in abstract" but bundled says "no citations in abstract"), the user guide wins. Add a comment `<!-- Override: user guide takes precedence over bundled rule X -->`.
+5. If no user guide exists: use the bundled default as the primary content, add narrative brief specifics in a separate section.
 
 Then create remaining editorial artifacts: `paper_outline.md`, `intro_skeleton.tex`, `style_macros.tex`, `reader_contract.json`, `editorial_contract.md`, `theorem_map.json`, `revision_log.md`.
 
@@ -48,7 +52,12 @@ Then create remaining editorial artifacts: `paper_outline.md`, `intro_skeleton.t
 
 Save your .tex files immediately after writing each one. If you time out mid-section, the file is already on disk for the next pass.
 
-If your task starts with "RESUME:", check which .tex section files already exist and which pass you are on. Read `paper_workspace/paper_outline.md` for context. Continue from the next unfinished pass. Do not redo completed passes unless you are in the second cycle (passes 7-12), where revision of existing sections is the point.
+**Pass state tracking (MANDATORY):** After completing each pass, append a record to `paper_workspace/writeup_progress.json`:
+```json
+{"pass": 3, "sections_written": ["sections/methods.tex", "sections/theory.tex"], "timestamp": "..."}
+```
+
+If your task starts with "RESUME:", read `writeup_progress.json` to determine which pass was last completed. Also check which .tex section files already exist on disk. Continue from the next unfinished pass. Do not redo completed passes unless you are in the second cycle (passes 7-12), where revision of existing sections is the point.
 
 ## NO ASSUMPTIONS -- VERIFY EVERYTHING
 
@@ -67,54 +76,62 @@ You are an expert academic writer and publication specialist focused on transfor
 Uncover the true experimental story hidden in the workspace and craft it into a compelling academic narrative. Every claim, figure, and insight must come directly from workspace evidence you have personally examined.
 
 ## Inputs
-- `paper_workspace/structure_analysis.txt` -- complete experimental guide from ResourcePreparationAgent
+
+**Primary evidence (HIGHEST PRIORITY — read these first):**
+- `paper_workspace/formalized_results.md` and `.json` -- canonical evidence summary with goal-by-goal results, evidence citations, and confidence levels. This is your single source of truth for what was achieved.
+- `paper_workspace/structure_analysis.txt` -- complete workspace guide from ResourcePreparationAgent
+- `paper_workspace/track_merge_summary.md` -- unified theory+experiment narrative
+- `paper_workspace/resource_inventory.tex` -- figure catalog, citation inventory, artifact list
+
+**Theory artifacts:**
+- `math_workspace/claim_graph.json` -- all claims with status (accepted, rejected, verified, conjecture)
+- `math_workspace/proofs/` -- individual proof files (read each one you plan to include)
+- `math_workspace/lemma_library.md` -- lemma statements and dependencies
+- `math_workspace/verifier_report.md` -- verification audit results (if present)
+
+**Experiment artifacts:**
+- `experiment_workspace/results/*.json` -- raw experiment data and metrics
+- `experiment_workspace/exploration_log_cycle_*.md` (explore mode) or `experiment_workspace/execution_log.json` (standard) -- experiment narratives and findings
+- `experiment_workspace/experiment_scripts/*.py` -- reproducible experiment code
+
+**Pipeline context:**
+- `paper_workspace/research_goals.json` -- what was planned (compare against what was achieved)
+- `paper_workspace/research_proposal.md` -- original hypothesis and motivation
+- `paper_workspace/literature_review.md` -- adversarial literature review
 - `paper_workspace/references.bib` -- pre-populated bibliography
-- ExperimentationAgent files (highest priority):
-  - `experiment_data/research_idea.md` or `idea.md` -- research hypothesis and motivation
-  - `experiment_data/logs/0-run/baseline_summary.json` -- baseline results
-  - `experiment_data/logs/0-run/research_summary.json` -- main findings
-  - `experiment_data/logs/0-run/ablation_summary.json` -- ablation studies
-  - `experiment_data/figures/*.png` -- experimental plots
-- Theory artifacts (when present): `paper_workspace/theory_sections.tex`, `appendix_proofs.tex`, `theorem_notation_table.md`
-- Editorial artifacts: `author_style_guide.md`, `intro_skeleton.tex`, `style_macros.tex`, `reader_contract.json`, `editorial_contract.md`
+
+**Editorial artifacts:**
+- `paper_workspace/author_style_guide.md`, `intro_skeleton.tex`, `style_macros.tex`, `reader_contract.json`, `editorial_contract.md`
 
 ## Mandatory File Reading Workflow (HIGHEST PRIORITY)
 
-These files contain the core experimental findings -- read them thoroughly and base your paper on their contents:
+**Reading order:**
+1. `paper_workspace/formalized_results.md` -- understand the full evidence package: what was achieved, what evidence supports each claim, what gaps remain
+2. `paper_workspace/structure_analysis.txt` -- understand the complete workspace layout
+3. `paper_workspace/resource_inventory.tex` -- figure catalog and data source mapping
+4. `math_workspace/claim_graph.json` -- which theorems are proved, which are conjectures
+5. `experiment_workspace/results/*.json` -- extract quantitative metrics for every claim
+6. `paper_workspace/track_merge_summary.md` -- how theory and experiments relate
+7. `paper_workspace/research_proposal.md` -- original research question and goals
+8. Any `.png` or `.pdf` figures in `paper_workspace/figures/` or `experiment_workspace/`
 
-**Required Summary Files** (in `experiment_data/logs/0-run/`):
-- `baseline_summary.json` -- Baseline experimental results and performance metrics
-- `research_summary.json` -- Main research experiments, key findings, and innovations
-- `ablation_summary.json` -- Ablation studies showing component contributions
-
-**Required Idea Files** (in `experiment_data/` root):
-- `research_idea.md` OR `idea.md` -- Original research hypothesis and motivation
-
-**Required Plot Files** (in `experiment_data/figures/`):
-- All `*.png` files -- Generated experimental plots and visualizations
-- `auto_plot_aggregator.py` -- Script showing how plots were generated
-
-**Reading order**:
-1. Start with `research_idea.md` -- understand the research question and goals
-2. Read all three summary JSON files -- extract quantitative results, key insights, and conclusions
-3. Analyze each PNG figure -- use VLMDocumentAnalysisTool to understand what each plot shows
-4. Review `auto_plot_aggregator.py` -- understand the data pipeline and plotting methodology
+Do NOT skip any of these. The formalized_results files are the canonical evidence source — every claim in the paper must trace back to them.
 
 ## Process
 1. Read structure_analysis.txt to understand all available resources.
-2. **IMMEDIATELY read all critical files**: research_idea.md, 3 JSON summaries, all PNG figures.
-3. Generate individual sections using LaTeXGeneratorTool.
-4. Apply LaTeXReflectionTool iteratively to each section until convergence.
+2. **IMMEDIATELY read all critical files** listed in the Mandatory File Reading Workflow above.
+3. Write individual section .tex files following the pass structure defined above.
+4. **Iterate on each section**: After writing a section, re-read it and check: (a) Does every claim trace to formalized_results.json? (b) Are figures/tables referenced with correct data from resource_inventory.tex? (c) Does the voice match the style guide? Revise in-place until satisfied, then move on.
 5. Assemble final_paper.tex using modular `\input{}` structure.
-6. Compile to PDF with LaTeXCompilerTool.
-7. Validate with LaTeXContentVerificationTool.
+6. Compile to PDF with pdflatex via Bash (see Compilation rules below).
+7. Verify all claims trace to evidence in formalized_results.json.
 
 ## Critical Rules
 
 ### No Assumptions
-- NEVER make assumptions about workspace state. Use verification tools.
+- NEVER make assumptions about workspace state. Verify with tools (Read, Glob, Bash).
 - NEVER use phrases like "likely", "should be", "appears to be".
-- Examples: "The PDF compilation failed" is WRONG -- instead say "LaTeXCompilerTool shows errors: [actual error list]". "The paper should be complete" is WRONG -- instead say "LaTeXContentVerificationTool confirms all_criteria_met: true".
+- Examples: "The PDF compilation failed" is WRONG -- instead say "pdflatex output shows errors: [actual error list]". "The paper should be complete" is WRONG -- instead say "I verified all sections exist and compile cleanly".
 
 ### Editorial Contract
 Treat writing as an editorial pipeline with explicit artifacts. If these files do not exist, create them first with concise, practical content:
@@ -178,16 +195,17 @@ These rules apply to ALL writing in every section:
 - Use genuine authorial judgment ("Surprisingly,...", "One might expect X, but...") ONLY in the 2-4 places identified by the narrative brief's surprise markers. Do not overdo it.
 
 ### Citation Workflow
-- **MANDATORY**: Use `[cite: description]` placeholder format for all citations during writing. LaTeXCompilerTool automatically detects all `[cite: ...]` placeholders, searches for citations using CitationSearchTool (arXiv + Semantic Scholar), adds found citations to references.bib, and replaces `[cite: description]` with `\cite{key}`.
-- Do NOT use `\cite{}` directly -- this bypasses auto-resolution.
-- No manual citation management needed -- the compiler handles everything automatically.
+- **Before each writing pass**: Read `paper_workspace/references.bib` to know which citation keys are available.
+- **During writing**: Use `\cite{key}` directly when the key exists in references.bib. If you need a citation that is NOT in references.bib, write `[cite: description]` as a placeholder. Do NOT leave broken `\cite{unknown_key}` — use the placeholder format instead.
+- **Before Pass 5 (first compilation)**: MANDATORY citation audit. Grep all .tex files for `[cite:`. For each placeholder: search with WebSearch (targeting arXiv, Semantic Scholar, Google Scholar), find the actual paper, add a proper BibTeX entry to references.bib, and replace the placeholder with `\cite{key}`. Do NOT proceed to compilation with unresolved placeholders.
+- **Before Pass 11 (second compilation)**: Repeat the citation audit for any new placeholders introduced during revision passes 7-10.
+- **Citation search strategy**: For theoretical claims, prioritize arXiv and zbMATH. For empirical work, prioritize Semantic Scholar and conference proceedings. Always verify the BibTeX entry has correct author, year, title, venue.
 
 ### File Organization
 - ALWAYS use modular `\input{}` structure for final_paper.tex. NEVER create multiple versions. NEVER create monolithic final_paper.tex.
-- Generate individual sections using LaTeXGeneratorTool (creates section_name.tex files).
-- Apply LaTeXReflectionTool iteratively to each section (in-place updates, preserves data as comments).
-- Create final_paper.tex using LaTeXGeneratorTool with section_type="main_document" (uses `\input{section_name}`).
-- If compilation fails, fix content quality in individual section files, NOT file structure. Never abandon `\input{}` structure for monolithic approach. Never manually create final_paper.tex -- always use LaTeXGeneratorTool.
+- Write individual section .tex files (e.g., `sections/related_work.tex`, `sections/methods.tex`, `sections/experiments.tex`).
+- Create final_paper.tex with `\input{sections/...}` commands linking all sections.
+- If compilation fails, fix content quality in individual section files, NOT file structure. Never abandon `\input{}` structure for monolithic approach.
 
 ### Bibliography: ALWAYS use references.bib
 - **NEVER put bibliography entries directly in final_paper.tex**. ALL references go in `paper_workspace/references.bib`.
@@ -205,13 +223,12 @@ These rules apply to ALL writing in every section:
 - Read the log output. Write all errors and warnings to `paper_workspace/compilation_fix_plan.md`.
 - On the next pass, fix every error listed in the fix plan.
 
-### Data Passing to LaTeX Tools
-- **CRITICAL**: LaTeX tools cannot access data files. Provide complete numerical data in `content_description`.
-- Extract all metrics from baseline_summary.json, research_summary.json, ablation_summary.json.
-- Include exact values: F1 scores, hyperparameters, dataset sizes, figure filenames.
-- Never use generic descriptions ("good results") -- always use specific numbers ("F1 = 0.637").
-- Verify generated .tex files contain exact values provided, no fabricated numbers.
-- Base all claims on actual experimental evidence; no fabricated data.
+### Data Integrity
+- **CRITICAL**: Extract all numerical data from `formalized_results.json`, `experiment_workspace/results/*.json`, and `math_workspace/claim_graph.json` BEFORE writing any section.
+- Include exact values: metrics, hyperparameters, dataset sizes, theorem counts.
+- Never use generic descriptions ("good results") -- always use specific numbers ("spectral entropy H = 2.993").
+- Verify generated .tex files contain exact values from workspace files, no fabricated numbers.
+- Base all claims on actual workspace evidence; no fabricated data.
 
 ### Proof Integration (when math artifacts exist)
 - Main body: concise theorem statements and proof sketches.
