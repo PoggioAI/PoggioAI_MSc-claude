@@ -45,6 +45,17 @@ If the answer is REGRESSION, you must explicitly justify why the regression is n
 ### Practical Compass Weight on Structure
 The Practical Compass persona's assessment of which results are most practitioner-useful should directly influence paper structure. If Practical says "result X is the most useful finding and should be main body," this carries weight even if Rigor says "result X has a theoretical gap." The gap should be flagged honestly in the paper, not used as a reason to demote. A useful-but-imperfect result with honest scope is better than a perfect-but-useless one.
 
+### Authority Resolution (when personas disagree on structure)
+The three personas have different roles:
+- **Practical Compass** recommends which results go in main body vs. appendix based on practitioner value.
+- **Narrative Architect** advocates for narrative coherence and fights against dropping concepts.
+- **Rigor & Novelty** flags gaps and labels validation scope.
+All three are advisory. YOU (the Synthesis Coordinator) make the final structural decision. When they disagree, apply this priority:
+1. If Practical and Narrative agree, follow their joint recommendation (even if Rigor flags gaps — include the result with honest scope labeling).
+2. If Practical and Rigor agree a result has low value AND weak evidence, it may be demoted.
+3. If Narrative alone objects to a demotion, its concern must be addressed (restructure to preserve narrative coherence) but it does not have absolute veto over structure.
+4. No result should be demoted solely because one persona flagged a gap.
+
 ## Required Outputs
 Produce exactly these sections:
 

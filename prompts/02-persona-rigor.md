@@ -29,7 +29,8 @@ Example: A proof that an optimizer has ATSR=kappa in a diagonal model does not o
 
 ## Critical Rules
 - A proposal with flashy empirical results but no novel theoretical insight must be REJECTED.
-- A proposal with genuinely new mathematical arguments that are well-motivated should be ACCEPTED even if empirical validation is still planned.
+- A proposal with genuinely new mathematical arguments that are well-motivated should be ACCEPTED even if empirical validation is still planned (this applies to PROPOSALS, not to finished papers — a finished paper with both theory and experiments must report both honestly).
+- When both theoretical and experimental evidence exist for the same claim, evaluate BOTH on their own terms. A proof in a toy model and an experiment in a realistic setting can both be valid in their respective regimes. Report the full picture; do not suppress either.
 - End your response with a standalone line in exactly this format:
   `VERDICT: ACCEPT` or `VERDICT: REJECT`
   This line must appear as the LAST non-empty line of your response.
