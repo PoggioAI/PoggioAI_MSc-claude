@@ -215,11 +215,64 @@ PHASE 11: persona_post_review (LAST STEP — only after validation gate PASSES)
 
 ---
 
-## Explore Mode (`--explore`)
+## Explore Mode Routing (`--explore`) — MANDATORY PHASE ENFORCEMENT
 
-When `mode == "explore"`, the pipeline runs 2-5 exploration cycles (Phases 1→6), then 1 final standard cycle (Phases 1→11).
+When `mode == "explore"`, the pipeline has TWO stages. You MUST execute both.
 
-**Details:** Read `docs/explore-mode.md` for explore cycle routing, exit rules, context injection templates, experiment execution rules, and state tracking.
+### Stage 1: Explore Cycles (repeat 2-5 times)
+
+Each explore cycle MUST run ALL of these phases in order. No skipping. No shortcuts.
+
+```
+EVERY EXPLORE CYCLE MUST RUN THESE PHASES IN THIS ORDER:
+  Phase 1: persona_council (SAME as standard — 3-5 debate rounds)
+  Phase 2: literature_review → GATE: feasibility_check (SAME as standard)
+  Phase 3: brainstorm (SAME as standard)
+  Phase 4: formalize_goals (SAME 5-node sequence, including milestone_goals)
+  Phase 5a: Math Explorer (prompts/30-math-explorer.md) — REPLACES theory_track
+  Phase 5b: Experiment Explorer (prompts/31-experiment-explorer.md) — REPLACES experiment_track
+  Phase 5c: Cross-Pollinator (prompts/32-cross-pollinator.md) — NEW, after 5a+5b
+  Phase 5d: Explore Evaluator (prompts/33-explore-evaluator.md) — REPLACES verify_completion
+    → CONTINUE: loop back to Phase 1 (start next explore cycle)
+    → CONVERGED: exit to Stage 2
+```
+
+You MUST run at least 2 full explore cycles (Phases 1-5d twice) before allowing CONVERGED.
+
+### Explore cycle exit rules (MANDATORY)
+
+- **Cycle 1**: ALWAYS CONTINUE — override any CONVERGED verdict. Minimum 2 explore cycles.
+- **Cycles 2-4**: Honor the Explore Evaluator's verdict. CONVERGED requires all 3 personas agree.
+- **Cycle 5**: ALWAYS CONVERGE — override any CONTINUE verdict. Maximum 5 explore cycles.
+
+### Stage 2: Final Standard Cycle (runs ONCE after explore converges)
+
+After explore converges, you MUST run the ENTIRE standard pipeline from the beginning:
+
+```
+FINAL STANDARD CYCLE — MUST RUN ALL PHASES:
+  Phase 1: persona_council       (start fresh with all explore discoveries as context)
+  Phase 2: literature_review     → GATE: feasibility_check
+  Phase 3: brainstorm
+  Phase 4: formalize_goals       → milestone_goals checkpoint
+  Phase 5a: theory_track         (use STANDARD prompts, not explore prompts)
+  Phase 5b: experiment_track     (use STANDARD prompts, not explore prompts)
+  Phase 5c: track_merge
+  Phase 5d: verify_completion
+  Phase 6: formalize_results     → GATE: duality_check
+  Phase 7: resource_prep
+  Phase 7b: pre_writeup_council
+  Phase 7c: narrative_voice
+  Phase 8: writeup
+  Phase 9: proofreading
+  Phase 10: reviewer             → GATE: validation_gate
+  Phase 11: persona_post_review  → milestone_review → DONE
+
+  DO NOT skip to Phase 8 (writeup). DO NOT skip Phases 1-7c.
+  This is a FULL run, not a shortcut. Every phase executes.
+```
+
+**Details:** Read `docs/explore-mode.md` for context injection templates, experiment execution rules, and state tracking fields.
 
 ---
 
