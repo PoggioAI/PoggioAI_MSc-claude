@@ -20,7 +20,7 @@ When `mode == "explore"`, the pipeline runs **2-5 exploration cycles** (Phases 1
 ## Explore cycle flow
 
 ```
-EXPLORE CYCLE N (of 2-5):
+EXPLORE CYCLE N (of 2-5) — Phases 1-6:
   Phase 1: Persona Council (with accumulated discoveries as context)
   Phase 2: Literature Review
   Phase 3: Brainstorm
@@ -29,6 +29,7 @@ EXPLORE CYCLE N (of 2-5):
   Phase 5b: Experiment Explorer (prompts/31-experiment-explorer.md)
   Phase 5c: Cross-Pollinator (prompts/32-cross-pollinator.md)
   Phase 5d: Explore Evaluator (prompts/33-explore-evaluator.md)
+  Phase 6: Formalize Results (prompts/15-formalize-results.md)
     -> CONTINUE: loop to Phase 1 (increment explore_cycle)
     -> CONVERGED: exit explore loop
 
