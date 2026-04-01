@@ -176,15 +176,17 @@ flowchart TD
     P11 -->|"Narrative rejects<br/>2nd time"| DONE
 
     %% ── Styles ──
-    classDef gate fill:#fff3cd,stroke:#856404
-    classDef checkpoint fill:#d1ecf1,stroke:#0c5460
-    classDef phase fill:#d4edda,stroke:#155724
-    classDef terminal fill:#f8d7da,stroke:#721c24
+    classDef gate fill:#fff3cd,stroke:#856404,color:#000
+    classDef checkpoint fill:#d1ecf1,stroke:#0c5460,color:#000
+    classDef phase fill:#d4edda,stroke:#155724,color:#000
+    classDef terminal fill:#f8d7da,stroke:#721c24,color:#000
 
     class G1,G2,G3,P5d,TR gate
     class HC1,HC2 checkpoint
     class P1,P2,P3,P4,P5a,P5b,P5c,P6,P7,P7b,P7c,P8,P9,P10,P11,FLR phase
     class DONE terminal
+
+    linkStyle default stroke:#999,color:#555
 ```
 
 ### Explore mode (`--explore`)
@@ -215,13 +217,15 @@ flowchart TD
     EDONE(["<b>Done</b>"])
     FSC --> EDONE
 
-    classDef gate fill:#fff3cd,stroke:#856404
-    classDef phase fill:#e2d9f3,stroke:#4a235a
-    classDef terminal fill:#f8d7da,stroke:#721c24
+    classDef gate fill:#fff3cd,stroke:#856404,color:#000
+    classDef phase fill:#e2d9f3,stroke:#4a235a,color:#000
+    classDef terminal fill:#f8d7da,stroke:#721c24,color:#000
 
     class EP5d gate
     class EP1,EP2,EP3,EP4,EP5a,EP5b,EP5c,FSC phase
     class EDONE terminal
+
+    linkStyle default stroke:#999,color:#555
 ```
 
 ---
