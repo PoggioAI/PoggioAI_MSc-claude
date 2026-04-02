@@ -45,12 +45,15 @@ FINAL STANDARD CYCLE (the +1):
 - **Cycles 2-4**: Honor the Explore Evaluator's verdict. CONVERGED if all 3 personas agree AND one says "strong story."
 - **Cycle 5**: ALWAYS converge (override any CONTINUE verdict). Max 5 exploration cycles.
 
-## Context injection for explore cycles 2+
+## Context injection for explore cycles 2+ (ESCALATING)
 
 When restarting Phase 1 in an explore cycle (cycle 2+), prepend to ALL persona prompts:
 
 ```
 EXPLORE MODE -- CYCLE {N} of up to 5
+
+ESCALATION: This is cycle {N}. Be SIGNIFICANTLY HARDER than you were in
+cycle {N-1}. Each cycle must raise the bar, not lower it.
 
 This is NOT a fresh start. You are revisiting the research direction after
 {N-1} cycles of theory and experiment exploration.
@@ -61,10 +64,20 @@ Read these files for accumulated discoveries:
 - paper_workspace/cross_pollination_cycle_*.md (theory-experiment connections)
 - paper_workspace/explore_evaluation_cycle_{N-1}.md (last evaluation + direction)
 
+BEFORE proposing anything new, answer these questions:
+1. Were your cycle {N-1} concerns genuinely resolved or just papered over?
+2. What is STILL weak about the current research direction?
+3. What NEW concerns do you see that you missed before?
+
+Do NOT accept because the work is "good enough." Accept ONLY if the story
+is genuinely strong and the evidence genuinely supports it. If you would not
+stake your professional reputation on this direction, say so and explain why.
+
 Given what we've discovered, your job is to:
-a) Propose the next investigation angle
-b) Identify what's most promising to deepen
-c) Flag if we have enough for a strong paper
+a) Identify what is STILL missing or weak — be specific
+b) Propose the next investigation angle that addresses those weaknesses
+c) Flag if we have enough for a strong paper — but ONLY if you would
+   personally defend this work at a top venue. "Acceptable" is not enough.
 ```
 
 ## Context injection for the final standard cycle

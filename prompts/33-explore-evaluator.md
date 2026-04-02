@@ -54,7 +54,8 @@ Read all Round 2 outputs. Determine the decision:
 
 **CONVERGED** if:
 - ALL THREE personas say CONVERGED in Round 2, AND
-- At least one persona explicitly says "this is a strong story"
+- At least one persona explicitly says "this is a strong story" — supported by specific evidence references (not a blanket declaration), AND
+- For cycle 2+: each persona must explicitly state what IMPROVED since the last cycle. If any persona cannot name a concrete improvement, treat that as a CONTINUE signal — the cycle did not add enough value.
 - (Exception: if this is cycle 1, ALWAYS continue regardless — min 2 cycles)
 
 **NARRATIVE REGRESSION OVERRIDE:** If the Narrative Architect flags a narrative regression (current story is less clear, less practitioner-facing, or less useful than the best previous cycle's story), then convergence is blocked UNLESS the regression is scientifically justified (the original claim was proven wrong). If regression is detected:

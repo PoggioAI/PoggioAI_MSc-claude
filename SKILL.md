@@ -246,6 +246,8 @@ You MUST run at least 2 full explore cycles (Phases 1-6 twice) before allowing C
 - **Cycles 2-4**: Honor the Explore Evaluator's verdict. CONVERGED requires all 3 personas agree.
 - **Cycle 5**: ALWAYS CONVERGE — override any CONTINUE verdict. Maximum 5 explore cycles.
 
+**Escalation:** Personas MUST be HARDER in each successive explore cycle. The cycle 2+ context injection escalates criticism and requires personas to verify that prior concerns were genuinely resolved. Read `docs/explore-mode.md` for the escalation template.
+
 ### Stage 2: Final Standard Cycle (runs ONCE after explore converges)
 
 After explore converges, you MUST run the ENTIRE standard pipeline from the beginning:
