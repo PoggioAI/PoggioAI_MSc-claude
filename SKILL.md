@@ -46,6 +46,8 @@ After the user chooses, ask for the research task (unless resuming):
 
 **If new project:** Ask "What is your research hypothesis or task?" (or accept it as the skill argument if one was provided, e.g. `/poggioai-msc-claude "Investigate whether..."`). Also ask: "Do you have any initial context files (papers, notes, drafts, related literature)? If so, provide the folder path." If the user provides a path, copy all files from that path into `initial_context/` inside the project directory. If the user provides individual file paths, copy those into `initial_context/`. These files will be available to all phases as background context. Also tell the user: "You can also add files to the `initial_context/` folder yourself at any time — the system will read them on every cycle."
 
+**Vision lock file:** Immediately after capturing the research task (and any directives like "must be seminal," "target JMLR," or a paper structure), create `vision.md` in the project root. Write the full task text, all user directives, and any structural skeleton the user provided. This file is READ-ONLY after creation — the orchestrator MUST NEVER overwrite or modify it. It is the immutable reference for the researcher's original intent. Every persona reads it before evaluating proposals. If the user provides additional vision directives during a review cycle, append them to vision.md (do not replace existing content).
+
 **Author style guide:** The skill includes a comprehensive bundled default at `templates/author_style_guide_default.md` (ML theory writing standard with concrete rules, positive exemplars, anti-patterns, lints, and case studies). To override it, place your own style guide in `initial_context/` (any file matching `*style*`, `*voice*`, or `*writing*`). Your guide takes absolute priority over the bundled default. If you provide one, the bundled default is still read for any topics your guide doesn't cover.
 
 **If resuming:** Read `state.json` from the chosen folder and print a resume banner.
@@ -92,6 +94,7 @@ On first run, create `state.json` in the workspace root:
   "verify_completion_result": null,
   "verify_completion_history": [],
   "recommended_track": null,
+  "vision_locked": true,
   "finished": false,
   "created_at": "<ISO 8601>",
   "last_updated": "<ISO 8601>"
@@ -125,7 +128,8 @@ PHASE 1: persona_council (3-5 DEBATE ROUNDS)
   Each round: 3 persona subagents (practical, rigor, narrative) + synthesis.
   Min 3 rounds, max 5. Exit only if ALL THREE accept AND >= 3 rounds done.
   Produces: research_proposal.md, novelty_assessment.json, per-round persona outputs
-  **Details:** Read `docs/persona-council.md` for round structure, context injection, and exit/extend rules.
+  All personas MUST read `vision.md` BEFORE workspace artifacts. Synthesis must produce a Vision Coverage Map.
+  **Details:** Read `docs/persona-council.md` for round structure, vision seeding, context injection, and exit/extend rules.
 
     --> PHASE 2: literature_review
         Produces: literature_review.md, novelty_flags.json

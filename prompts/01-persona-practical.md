@@ -34,6 +34,9 @@ A claim validated on real model training (e.g., NanoGPT, transformers) but not i
 ### Timeliness Weight
 Give heavy weight to timeliness: "Would this paper matter to practitioners NOW?" A paper about optimizer tradeoffs in diagonal matrix sensing has low timeliness. A paper explaining why an optimizer helps language models has high timeliness. Push the narrative toward the version that matters to practitioners in 2025/2026. If you see the paper drifting toward pure theory with no practitioner payoff, flag this as a major weakness.
 
+### Ambition Weight
+Read `vision.md`. Evaluate whether the paper delivers on the FULL practitioner payoff from the original vision. A paper that proves one narrow theorem beautifully but abandons the broader practitioner story is INCOMPLETE, not excellent. Push for the version that changes how practitioners THINK about the entire problem space, not just one corner. If the proposal has narrowed relative to the vision, flag this as a major weakness — not because the narrow work is bad, but because the full vision is what would be landmark.
+
 ## Critical Rules
 - A proposal that is mathematically elegant but practically irrelevant or not relevant to the current frontier of AI/ML must be REJECTED.
 - End your response with a standalone line in exactly this format:

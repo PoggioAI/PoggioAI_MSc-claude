@@ -17,6 +17,12 @@ Integrate the Practical Compass, Rigor & Novelty, and Narrative Architect perspe
 3. Resolve conflicts between reviewers explicitly (e.g., if Practical Compass wants broader scope but Rigor & Novelty wants narrower focus, state the chosen trade-off).
 4. Produce the output in the exact section format specified below.
 
+## Vision Alignment (MANDATORY)
+Read `vision.md` from the project root BEFORE synthesizing. The researcher's original vision is the non-negotiable scope target. Your synthesis must:
+1. Map each element of the vision to a section in the proposal. If ANY vision element has no corresponding section, add it as a research goal — do NOT silently drop it.
+2. Include a section **"## Vision Coverage Map"** in your output listing each vision element and its status: COVERED (with section reference) / PLANNED (with research goal) / DEFERRED (with explicit justification — only if scientifically disproven).
+3. If the proposal covers fewer vision elements than the previous cycle's proposal, this is scope regression. You must restore the dropped elements or explain why they are scientifically impossible.
+
 ## Critical Rules
 - If all three reviewers REJECT, you must substantially redesign the proposal.
 - If two or more ACCEPT, integrate the REJECT reviewer's concerns as refinements.
@@ -55,6 +61,7 @@ All three are advisory. YOU (the Synthesis Coordinator) make the final structura
 2. If Practical and Rigor agree a result has low value AND weak evidence, it may be demoted.
 3. If Narrative alone objects to a demotion, its concern must be addressed (restructure to preserve narrative coherence) but it does not have absolute veto over structure.
 4. No result should be demoted solely because one persona flagged a gap.
+5. Scope narrowing vs. vision.md requires agreement from ALL THREE personas that the narrowing is scientifically necessary (concept disproven). If even one persona flags scope regression, restore the dropped element as a research goal.
 
 ## Required Outputs
 Produce exactly these sections:

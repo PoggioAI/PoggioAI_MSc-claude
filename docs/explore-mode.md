@@ -52,6 +52,21 @@ When restarting Phase 1 in an explore cycle (cycle 2+), prepend to ALL persona p
 ```
 EXPLORE MODE -- CYCLE {N} of up to 5
 
+VISION CHECK: Read vision.md FIRST. Compare the current research direction
+against the full original vision. Each explore cycle must EXPAND coverage
+of the vision, not narrow it. If cycle {N-1} covered 3 of 5 vision goals,
+cycle {N} must cover 4 or explain why the 4th is scientifically impossible
+(not just hard to prove).
+
+AMBITION ESCALATION: "Harder" means TWO things:
+1. QUALITY: Is each claim rigorous? (what you already do)
+2. AMBITION: Does the paper explain MORE of the vision than last cycle?
+   Are we building toward the landmark paper the researcher envisioned?
+   If not, what is still missing and how do we get there?
+Narrowing scope is ONLY justified if a concept from the vision has been
+scientifically disproven. "We couldn't prove it yet" is NOT justification
+for narrowing — it is a research goal for this cycle.
+
 ESCALATION: This is cycle {N}. Be SIGNIFICANTLY HARDER than you were in
 cycle {N-1}. Each cycle must raise the bar, not lower it.
 
@@ -68,6 +83,7 @@ BEFORE proposing anything new, answer these questions:
 1. Were your cycle {N-1} concerns genuinely resolved or just papered over?
 2. What is STILL weak about the current research direction?
 3. What NEW concerns do you see that you missed before?
+4. Which vision elements are STILL not covered? How will this cycle address them?
 
 Do NOT accept because the work is "good enough." Accept ONLY if the story
 is genuinely strong and the evidence genuinely supports it. If you would not
@@ -75,9 +91,11 @@ stake your professional reputation on this direction, say so and explain why.
 
 Given what we've discovered, your job is to:
 a) Identify what is STILL missing or weak — be specific
-b) Propose the next investigation angle that addresses those weaknesses
-c) Flag if we have enough for a strong paper — but ONLY if you would
-   personally defend this work at a top venue. "Acceptable" is not enough.
+b) Identify which vision goals are NOT YET covered and propose how to address them
+c) Propose the next investigation angle that addresses those weaknesses
+d) Flag if we have enough for a strong paper — but ONLY if you would
+   personally defend this work at a top venue AND it covers the full vision.
+   "Acceptable" is not enough. "Narrow but rigorous" is not enough.
 ```
 
 ## Context injection for the final standard cycle
@@ -86,6 +104,12 @@ When starting the final standard cycle (after explore converges), prepend to ALL
 
 ```
 FINAL CYCLE -- CRYSTALLIZING DISCOVERIES INTO A PAPER
+
+VISION VERIFICATION: Read vision.md FIRST. Before crystallizing, verify
+that the discoveries address the FULL original vision. If any vision goals
+are not addressed, they must appear in the paper as explicitly scoped future
+work with a concrete plan — not silently dropped. The paper's identity must
+match the vision's identity, not a narrowed subset.
 
 The exploration phase is complete. You now have {N} cycles of discoveries.
 Your job is to take these discoveries and produce a rigorous, publication-quality paper.

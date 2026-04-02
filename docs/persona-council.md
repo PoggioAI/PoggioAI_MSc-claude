@@ -6,6 +6,21 @@ This file is read by the orchestrator when executing Phase 1 (persona_council).
 
 Phase 1 runs **3 to 5 debate rounds** before producing a final proposal. Multiple rounds force the personas to sharpen their critiques and the synthesis to genuinely address them.
 
+## Vision Seeding (ALL rounds)
+
+Prepend to ALL persona prompts in EVERY round (before any other context):
+
+```
+VISION: Read vision.md in the project root FIRST. This is the researcher's
+original vision and it is immutable — it defines the paper's scope.
+
+Your evaluation MUST answer (include a section "## Scope vs. Vision"):
+1. Does this proposal address the FULL scope of the vision, or has it narrowed?
+2. If narrowed: is this a justified deepening (richer treatment of fewer elements)
+   or an unjustified retreat (concepts dropped because they're hard to prove)?
+3. Which vision elements are NOT YET covered? These are research goals, not cuts.
+```
+
 ## Round structure (3 rounds minimum, up to 5)
 
 For each round:
@@ -33,6 +48,12 @@ The proposal was revised after your feedback: paper_workspace/research_proposal.
 Be HARDER this round. Check whether your previous concerns were genuinely addressed
 or merely papered over. Raise NEW concerns you missed before. Do not repeat praise
 for things already acknowledged.
+
+AMBITION CHECK: Each successive round must EXPAND the proposal's explanatory
+reach, not narrow it. "Harder" means "explain MORE of the vision at the same
+quality level," not "cut what you can't immediately prove." If a concept from
+the vision is missing, your job is to figure out how to include it — not to
+accept its absence.
 ```
 
 ## Exit rules
