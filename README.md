@@ -27,6 +27,12 @@ No Python, no dependencies, no API keys beyond Claude Code itself.
 ## Installation
 
 ```bash
+npx skills add PoggioAI/PoggioAI_MSc-claude
+```
+
+Or manually:
+
+```bash
 git clone https://github.com/PoggioAI/PoggioAI_MSc-claude.git
 cp -r PoggioAI_MSc-claude ~/.claude/skills/poggioai-msc-claude
 ```
