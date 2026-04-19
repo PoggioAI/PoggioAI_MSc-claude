@@ -2,11 +2,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-skill-blueviolet)](https://docs.anthropic.com/en/docs/claude-code)
-[![PoggioAI](https://img.shields.io/badge/PoggioAI-MSc-orange)](https://PoggioAI.github.io)
+[![pAI](https://img.shields.io/badge/pAI-MSc-orange)](https://PoggioAI.github.io)
 
 A Claude Code skill that runs autonomous multi-agent research: takes a hypothesis and produces a literature-grounded, evidence-backed manuscript draft in 10 human steers or fewer.
 
-[Website](https://PoggioAI.github.io) | [Paper](https://poggioai.github.io/papers/poggioai-msc-v0.pdf) | [Full Python System](https://github.com/PoggioAI/PoggioAI_MSc) | [Discord](https://discord.gg/Pz7spPPY)
+[Website](https://PoggioAI.github.io) | [Paper](https://dspace.mit.edu/handle/1721.1/165377) | [Full Python System](https://github.com/PoggioAI/PoggioAI_MSc) | [Discord](https://discord.gg/Pz7spPPY)
 
 ---
 
@@ -65,7 +65,8 @@ Use explore mode when you have a **direction** rather than a **hypothesis** — 
 | Experiment track | Validate hypothesis | Discover: run broadly, read critically, follow up on surprises |
 | Theory-experiment interaction | Independent, merge at end | Cross-pollinate after each cycle |
 | Full pipeline cycles | 1 | 2-5 explore + 1 standard |
-| CPU experiments | Ask human | Run automatically (< 30 min, no GPU) |
+| CPU experiments | Run automatically (no time limit) | Run automatically (no time limit) |
+| GPU experiments | Submit to MIT Engaging cluster (`ou_bcs_normal`) via SLURM | Submit to MIT Engaging cluster (`ou_bcs_normal`) via SLURM |
 
 ### From a task file
 
@@ -350,9 +351,9 @@ This is an honest list. If these matter to you, use the [full Python system](htt
 | **No true parallelism** | Theory and experiment tracks run sequentially, not in parallel. Subagents run one at a time. | Doubles wall-clock time for "both" track runs. No quality impact, just slower. |
 | **No tree search breadth** | The full system explores N proof strategies in parallel via DAG-layered best-first search. This skill tries strategies sequentially with backtracking. | For hard theorems, the full system finds proofs faster by exploring multiple approaches simultaneously. This skill will eventually try the same approaches, just slower. |
 | **No autonomous repair** | The full system's campaign heartbeat can deploy a Claude Code repair agent to diagnose and fix failed stages automatically. This skill just stops and asks you. | Minor — you're steering anyway. The repair agent saves time on infrastructure failures, not research failures. |
-| **No experiment execution sandbox** | The full system integrates AI-Scientist-v2 for actual code execution with subprocess isolation. This skill designs experiments but cannot run code. | You'll need to run experiments manually. The skill produces experiment_design.json; you execute it yourself. |
+| **No experiment execution sandbox** | The full system integrates AI-Scientist-v2 with subprocess isolation and managed run directories. This skill executes CPU experiments directly via Bash and GPU experiments via SLURM on the MIT Engaging cluster (partition `ou_bcs_normal`) — no sandbox, no isolation. | You get automated execution but without sandbox safety. Scripts run in your shell environment; cluster jobs run under your account. |
 | **No budget tracking** | The full system tracks token usage and cost per stage via JSON ledgers with hard budget caps. This skill has no spend visibility. | You won't know how much each phase cost. Monitor your API usage dashboard separately. |
-| **No SLURM/HPC integration** | The full system can submit GPU jobs via SLURM. This skill runs locally only. | Only matters if you need GPU experiments on a cluster. |
+| **Hardcoded single cluster** | The full system can target multiple SLURM clusters with configurable partitions and accounting. This skill is hardcoded to `ssh engaging` + partition `ou_bcs_normal`. | If you want to use a different cluster, edit `prompts/13-experimentation.md` and `prompts/31-experiment-explorer.md`. |
 | **Weaker error recovery** | The full system has circuit breakers, exponential backoff, quorum logic for counsel failures, and campaign-level death-loop detection. This skill relies on Claude's built-in retry logic. | Occasionally a phase may fail silently where the full system would retry or escalate. Check artifacts manually. |
 | **Context window limits** | A single Claude Code session has finite context. Very long runs (20+ phases) may degrade as context fills up. The full system uses fresh LLM calls per agent with no shared context accumulation. | For long campaigns, use scheduled tasks (each invocation gets fresh context) rather than a single continuous session. |
 
@@ -360,7 +361,7 @@ This is an honest list. If these matter to you, use the [full Python system](htt
 
 Use this skill for: quick research explorations, literature reviews, paper outlining, and ML theory work where you're actively steering.
 
-Use the full system for: production-quality papers, multi-model quality assurance, automated experiment execution, and unattended multi-day campaigns.
+Use the full system for: production-quality papers, multi-model quality assurance, sandboxed experiment execution, budget tracking, and unattended multi-day campaigns.
 
 ---
 
@@ -419,4 +420,4 @@ Areas where contributions are especially valuable:
 
 MIT License.
 
-Based on [PoggioAI/MSc](https://github.com/PoggioAI/PoggioAI_MSc) by Mahmoud Abdelmoneum, Pierfrancesco Beneventano, and Tomaso Poggio (MIT + Perseus Labs).
+Based on [pAI/MSc](https://github.com/PoggioAI/PoggioAI_MSc) by Mahmoud Abdelmoneum, Pierfrancesco Beneventano, and Tomaso Poggio (MIT + Perseus Labs).

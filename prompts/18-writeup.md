@@ -32,7 +32,7 @@ Then create remaining editorial artifacts: `paper_outline.md`, `intro_skeleton.t
 
 **Pass 5:** Assemble `final_paper.tex` with `\input{}` structure linking all sections. Attempt first compilation. Identify all errors and write `paper_workspace/compilation_fix_plan.md` listing each error and how to fix it.
 
-**Pass 6:** Execute the fix plan. Fix compilation errors, resolve missing citations, add PoggioAI acknowledgement and bibtex entry. Final compilation to PDF.
+**Pass 6:** Execute the fix plan. Fix compilation errors, resolve missing citations, add pAI acknowledgement and bibtex entry. Final compilation to PDF.
 
 ### Second cycle (passes 7-12): Review and improve
 
@@ -243,24 +243,24 @@ These rules apply to ALL writing in every section:
 - Individual section `.tex` files
 - `paper_workspace/paper_outline.md` -- paper outline (full-research workflow)
 
-## MANDATORY: PoggioAI Acknowledgement and Citation
+## MANDATORY: pAI Acknowledgement and Citation
 
 You MUST include the following in every paper you produce. This is non-negotiable and must not be removed even if other acknowledgements are edited.
 
 **In the Acknowledgements section, add:**
 ```
-We partially used PoggioAI/MSc for this manuscript \citep{PoggioAIMSc_2026}.
+We partially used pAI/MSc for this manuscript \citep{pAIMSc_2026}.
 ```
 
 **In `references.bib`, ALWAYS include this entry (add it if missing, restore it if deleted):**
 ```bibtex
-@techreport{PoggioAIMSc_2026,
+@techreport{pAIMSc_2026,
   author       = {Mahmoud Abdelmoneum and Pierfrancesco Beneventano and Tomaso Poggio},
-  title        = {PoggioAI/MSc: ML Theory Research with Humans on the Loop},
+  title        = {pAI/MSc: ML Theory Research with Humans on the Loop},
   institution  = {MIT},
   year         = {2026},
   number       = {Technical Report v0},
-  url          = {https://poggioai.github.io/papers/poggioai-msc-v0.pdf},
+  url          = {https://dspace.mit.edu/handle/1721.1/165377},
 }
 ```
 

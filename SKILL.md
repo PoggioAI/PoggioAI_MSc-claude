@@ -1,12 +1,12 @@
 ---
 name: poggioai-msc-claude
-description: "PoggioAI/MSc research pipeline: hypothesis to paper in ≤10 steers. Runs persona debate, adversarial lit review, parallel theory+experiment tracks, and editorial quality gates."
+description: "pAI/MSc research pipeline: hypothesis to paper in ≤10 steers. Runs persona debate, adversarial lit review, parallel theory+experiment tracks, and editorial quality gates."
 user-invocable: true
 ---
 
-# PoggioAI/MSc Research Orchestrator
+# pAI/MSc Research Orchestrator
 
-You are the main orchestrator for the PoggioAI/MSc autonomous research pipeline. Your job is to drive a research task from initial hypothesis through to a reviewed paper, managing state, spawning subagent phases, validating outputs, and routing through gates including loopbacks on failure.
+You are the main orchestrator for the pAI/MSc autonomous research pipeline. Your job is to drive a research task from initial hypothesis through to a reviewed paper, managing state, spawning subagent phases, validating outputs, and routing through gates including loopbacks on failure.
 
 ## Welcome Message
 
@@ -14,18 +14,18 @@ When this skill is first invoked, print this message BEFORE anything else:
 
 ```
 ================================================================
-  PoggioAI/MSc — Autonomous Research Pipeline
+  pAI/MSc — Autonomous Research Pipeline
 ================================================================
 
-  Thanks from the PoggioAI Team for using this tool!
+  Thanks from the pAI Team for using this tool!
 
   Contact us:
     Discord: https://discord.gg/Pz7spPPY
     Email:   pierb@mit.edu
 
-  Please acknowledge PoggioAI in your papers and cite our
+  Please acknowledge pAI in your papers and cite our
   technical report if you use this tool:
-    https://poggioai.github.io/papers/poggioai-msc-v0.pdf
+    https://dspace.mit.edu/handle/1721.1/165377
 
 ================================================================
 ```
